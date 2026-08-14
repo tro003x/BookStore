@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+ 
+}
+
+enum Role {
+  ADMIN
+  PUBLISHER
+  READER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?  // nullable because we might have OAuth later, but for now we'll set it
+  name         String?
+  role         Role     @default(READER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  publisher    Publisher?
+  cart         Cart?    // one-to-one with Cart
+  purchases    Purchase[]
+}
+
+model Publisher {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  approved   Boolean  @default(false) // admin must approve before they can publish
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  books      Book[]
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  books     Book[]
+}
+
+model Book {
+  id            String       @id @default(uuid())
+  title         String
+  author        String
+  description   String?
+  price         Decimal      @db.Decimal(10,2)
+  coverImageUrl String?      // path in Supabase storage (we'll handle later)
+  pdfStoragePath String?     // path to PDF file
+  status        BookStatus   @default(PENDING) // PENDING, APPROVED, REJECTED
+  publishedAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  publisherId   String
+  publisher     Publisher    @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  categoryId    String
+  category      Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  cartItems     CartItem[]
+  purchaseItems PurchaseItem[]
+}
+
+enum BookStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Cart and CartItem
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  quantity  Int      @default(1)
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  bookId    String
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, bookId]) // prevent duplicate book in same cart
+}
+
+// Purchase and PurchaseItem
+model Purchase {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchasedAt DateTime @default(now())
+  totalAmount Decimal  @db.Decimal(10,2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       PurchaseItem[]
+}
+
+model PurchaseItem {
+  id         String   @id @default(uuid())
+  purchaseId String
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  bookId     String
+  book       Book     @relation(fields: [bookId], references: [id], onDelete: Restrict)
+  priceAtPurchase Decimal @db.Decimal(10,2) // snapshot of the book's price
+  quantity   Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
