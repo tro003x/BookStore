@@ -6,6 +6,6 @@ export default defineConfig({
   },
   datasource: {
     
-    url: 'postgresql://postgres:NSbK4LIqyjBFUVts@db.idklhpsivzxcmieoownk.supabase.co:5432/postgres',
+    url: 'postgresql://postgres:5bl5V7KkCxlCXOrXaa@db.idklhpsivzxcmieoownk.supabase.co:5432/postgres?sslmode=no-verify',
   },
 });
