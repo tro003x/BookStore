@@ -7,10 +7,15 @@ export async function GET(
 ) {
   const book = await prisma.book.findUnique({
     where: { id: params.id },
-    include: { category: true, publisher: { select: { name: true } } },
+    include: {
+      category: true,
+      publisher: { select: { name: true } },
+    },
   });
+
   if (!book) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
+
   return NextResponse.json(book);
 }

@@ -27,6 +27,7 @@ model User {
   purchases    Purchase[]
 }
 
+
 model Publisher {
   id         String   @id @default(uuid())
   userId     String   @unique

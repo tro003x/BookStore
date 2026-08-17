@@ -1,0 +1,19 @@
+import { NextResponse } from 'next/server';
+import { getUserFromRequest } from '@/lib/getUser';
+import { prisma } from '@/lib/prisma';
+
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const cart = await prisma.cart.findUnique({ where: { userId: user.id } });
+  if (!cart) return NextResponse.json({ error: 'Cart not found' }, { status: 404 });
+
+  const item = await prisma.cartItem.findFirst({
+    where: { id: params.id, cartId: cart.id },
+  });
+  if (!item) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+
+  await prisma.cartItem.delete({ where: { id: params.id } });
+  return NextResponse.json({ message: 'Removed' });
+}
