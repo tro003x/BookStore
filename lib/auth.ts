@@ -1,11 +1,22 @@
-import { NextAuthOptions } from 'next-auth';
+import { NextAuthOptions, DefaultSession } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
 
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      role: string;
+      publisherId?: string | null;
+    } & DefaultSession['user'];
+  }
+  interface User {
+    role: string;
+    publisherId?: string | null;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -31,7 +42,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          publisherId: user.publisher?.id || null,
+          publisherId: user.publisher?.id ?? null,
         };
       },
     }),
@@ -40,7 +51,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role;
-        token.publisherId = (user as any).publisherId;
+        token.publisherId = (user as { publisherId?: string | null }).publisherId;
       }
       return token;
     },
@@ -53,6 +64,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   session: { strategy: 'jwt' },
-  pages: { signIn: '/login', signUp: '/signup' },
+  pages: { signIn: '/login' },
   secret: process.env.NEXTAUTH_SECRET,
+  useSecureCookies: process.env.NEXTAUTH_URL?.startsWith('https://') ?? false,
 };

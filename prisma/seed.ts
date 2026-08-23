@@ -4,7 +4,9 @@ import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 
 // Create the adapter using your DATABASE_URL from environment
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ 
+  connectionString: 'postgresql://postgres:5bl5V7KkCxlCXOrXaa@db.idklhpsivzxcmieoownk.supabase.co:5432/postgres?sslmode=no-verify' 
+});
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
