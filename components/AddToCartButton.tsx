@@ -36,11 +36,11 @@ export default function AddToCartButton({ bookId }: { bookId: string }) {
 
   return (
     <button
-      onClick={handleAdd}
-      disabled={loading}
-      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
-    >
-      {loading ? 'Adding...' : 'Add to Cart'}
-    </button>
+  onClick={handleAdd}
+  disabled={loading}
+  className="bg-[#4B5D45] text-white px-3 py-1 rounded text-sm hover:opacity-90 disabled:opacity-50"
+>
+  {loading ? 'Adding...' : 'Add to cart'}
+</button>
   );
 }
