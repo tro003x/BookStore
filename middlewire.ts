@@ -6,14 +6,15 @@ export default withAuth(
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
 
-    if (path.startsWith('/dashboard/admin') && token?.role !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/', req.url));
-    }
-    if (path.startsWith('/dashboard/publisher') && token?.role !== 'PUBLISHER') {
-      return NextResponse.redirect(new URL('/', req.url));
-    }
-    if (path.startsWith('/dashboard/reader') && token?.role !== 'READER') {
-      return NextResponse.redirect(new URL('/', req.url));
+    console.log('Middleware - path:', path);
+    console.log('Middleware - token:', token);
+    console.log('Middleware - role:', token?.role);
+
+    if (path.startsWith('/dashboard/admin')) {
+      if (token?.role !== 'ADMIN') {
+        console.log('Redirecting to / - not admin');
+        return NextResponse.redirect(new URL('/', req.url));
+      }
     }
 
     return NextResponse.next();
@@ -26,11 +27,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/cart',
-    '/purchases',
-    '/api/cart/:path*',
-    '/api/purchases/:path*',
-  ],
+  matcher: ['/dashboard/:path*', '/cart', '/purchases'],
 };
