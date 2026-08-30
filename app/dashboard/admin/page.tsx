@@ -29,107 +29,126 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState<'publishers' | 'books'>('publishers');
 
   useEffect(() => {
+    if (status === 'loading') return;
+
     if (status === 'unauthenticated') {
       router.push('/login');
       return;
     }
-    if (session?.user?.role !== 'ADMIN') {
+
+    // Check if user is admin
+    if (!session?.user || session.user.role !== 'ADMIN') {
       router.push('/');
       return;
     }
-    fetchData();
-  }, [status, session]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    const [pubsRes, booksRes] = await Promise.all([
-      fetch('/api/admin/publishers'),
-      fetch('/api/admin/books'),
-    ]);
-    const pubs = await pubsRes.json();
-    const bks = await booksRes.json();
-    setPublishers(pubs);
-    setBooks(bks);
-    setLoading(false);
-  };
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [pubsRes, booksRes] = await Promise.all([
+          fetch('/api/admin/publishers'),
+          fetch('/api/admin/books'),
+        ]);
+        const pubs = await pubsRes.json();
+        const bks = await booksRes.json();
+        setPublishers(pubs);
+        setBooks(bks);
+      } catch (error) {
+        console.error('Fetch error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [status, session, router]);
 
   const approvePublisher = async (id: string) => {
     await fetch(`/api/admin/publishers/${id}/approve`, { method: 'POST' });
-    fetchData();
+    const pubsRes = await fetch('/api/admin/publishers');
+    const pubs = await pubsRes.json();
+    setPublishers(pubs);
   };
 
   const approveBook = async (id: string) => {
     await fetch(`/api/admin/books/${id}/approve`, { method: 'POST' });
-    fetchData();
+    const booksRes = await fetch('/api/admin/books');
+    const bks = await booksRes.json();
+    setBooks(bks);
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading) return <div className="p-8 text-center">Loading admin dashboard...</div>;
+
+  const pendingPublishers = publishers.filter(p => !p.approved);
+  const pendingBooks = books.filter(b => b.status === 'PENDING');
 
   return (
     <div className="min-h-screen bg-[#EFE9DC] p-6">
-      <h1 className="font-['Fraunces'] text-3xl font-semibold mb-6">Admin Dashboard</h1>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="font-['Fraunces'] text-3xl font-semibold mb-6">Admin Dashboard</h1>
 
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => setTab('publishers')}
-          className={`px-4 py-2 rounded ${tab === 'publishers' ? 'bg-[#4B5D45] text-white' : 'bg-[#C9BFA8]'}`}
-        >
-          Publishers ({publishers.filter(p => !p.approved).length} pending)
-        </button>
-        <button
-          onClick={() => setTab('books')}
-          className={`px-4 py-2 rounded ${tab === 'books' ? 'bg-[#4B5D45] text-white' : 'bg-[#C9BFA8]'}`}
-        >
-          Books ({books.filter(b => b.status === 'PENDING').length} pending)
-        </button>
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setTab('publishers')}
+            className={`px-4 py-2 rounded ${tab === 'publishers' ? 'bg-[#4B5D45] text-white' : 'bg-[#C9BFA8]'}`}
+          >
+            Publishers ({pendingPublishers.length} pending)
+          </button>
+          <button
+            onClick={() => setTab('books')}
+            className={`px-4 py-2 rounded ${tab === 'books' ? 'bg-[#4B5D45] text-white' : 'bg-[#C9BFA8]'}`}
+          >
+            Books ({pendingBooks.length} pending)
+          </button>
+        </div>
+
+        {tab === 'publishers' && (
+          <div className="space-y-3">
+            {pendingPublishers.length === 0 ? (
+              <p className="text-gray-600">All publishers approved.</p>
+            ) : (
+              pendingPublishers.map((p) => (
+                <div key={p.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">{p.name}</p>
+                    <p className="text-sm text-gray-600">{p.user.email}</p>
+                  </div>
+                  <button
+                    onClick={() => approvePublisher(p.id)}
+                    className="bg-[#4B5D45] text-white px-4 py-1 rounded hover:opacity-90"
+                  >
+                    Approve
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {tab === 'books' && (
+          <div className="space-y-3">
+            {pendingBooks.length === 0 ? (
+              <p className="text-gray-600">All books approved.</p>
+            ) : (
+              pendingBooks.map((b) => (
+                <div key={b.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">{b.title}</p>
+                    <p className="text-sm text-gray-600">by {b.author}</p>
+                    <p className="text-sm text-gray-500">{b.category.name} • {b.publisher.name}</p>
+                  </div>
+                  <button
+                    onClick={() => approveBook(b.id)}
+                    className="bg-[#4B5D45] text-white px-4 py-1 rounded hover:opacity-90"
+                  >
+                    Approve
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
-
-      {tab === 'publishers' && (
-        <div className="space-y-3">
-          {publishers.filter(p => !p.approved).length === 0 ? (
-            <p>All publishers approved.</p>
-          ) : (
-            publishers.filter(p => !p.approved).map((p) => (
-              <div key={p.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
-                <div>
-                  <p className="font-semibold">{p.name}</p>
-                  <p className="text-sm text-gray-600">{p.user.email}</p>
-                </div>
-                <button
-                  onClick={() => approvePublisher(p.id)}
-                  className="bg-[#4B5D45] text-white px-4 py-1 rounded hover:opacity-90"
-                >
-                  Approve
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
-      {tab === 'books' && (
-        <div className="space-y-3">
-          {books.filter(b => b.status === 'PENDING').length === 0 ? (
-            <p>All books approved.</p>
-          ) : (
-            books.filter(b => b.status === 'PENDING').map((b) => (
-              <div key={b.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
-                <div>
-                  <p className="font-semibold">{b.title}</p>
-                  <p className="text-sm text-gray-600">by {b.author}</p>
-                  <p className="text-sm text-gray-500">{b.category.name} • {b.publisher.name}</p>
-                </div>
-                <button
-                  onClick={() => approveBook(b.id)}
-                  className="bg-[#4B5D45] text-white px-4 py-1 rounded hover:opacity-90"
-                >
-                  Approve
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      )}
     </div>
   );
 }

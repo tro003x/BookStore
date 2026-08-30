@@ -3,6 +3,21 @@ import { getUserFromRequest } from '@/lib/getUser';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
 
+export async function GET(req: Request) {
+  const user = await getUserFromRequest(req);
+  if (!user || user.role !== 'PUBLISHER' || !user.publisher) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const books = await prisma.book.findMany({
+    where: { publisherId: user.publisher.id },
+    include: { category: true },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return NextResponse.json(books);
+}
+
 export async function POST(req: Request) {
   const user = await getUserFromRequest(req);
   if (!user || user.role !== 'PUBLISHER' || !user.publisher) {

@@ -9,16 +9,28 @@ const categoryColors: Record<string, string> = {
   'History': '#8F6B3C',
 };
 
-export default function BookCard({ book }: { book: any }) {
+interface BookCardProps {
+  book: {
+    id: string;
+    title: string;
+    author: string;
+    price: number;
+    category: { name: string };
+  };
+}
+
+export default function BookCard({ book }: BookCardProps) {
   const color = categoryColors[book.category.name] || '#4B5D45';
 
   return (
     <div className="flex bg-[#EFE9DC] rounded-r-[10px] shadow hover:shadow-lg transition-shadow overflow-hidden">
-      <div className="w-2 flex-shrink-0" style={{ backgroundColor: color }} />
+      <div className="w-2 shrink-0" style={{ backgroundColor: color }} />
       <div className="p-4 flex-1">
-        <h3 className="font-['Fraunces'] font-medium text-lg line-clamp-2">
-          {book.title}
-        </h3>
+        <Link href={`/book/${book.id}`}>
+          <h3 className="font-['Fraunces'] font-medium text-lg line-clamp-2 hover:underline">
+            {book.title}
+          </h3>
+        </Link>
         <p className="text-sm text-[#1A1D1E]/70">{book.author}</p>
         <div className="mt-2 flex justify-between items-center">
           <span className="font-['IBM_Plex_Mono'] text-[#A85C32] font-bold">
