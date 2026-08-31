@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import AddToCartButton from '@/components/AddToCartButton';
 import ReviewSection from '@/components/ReviewSection';
 import { notFound } from 'next/navigation';
+import PDFViewer from '@/components/PDFViewer';
 
 export default async function BookDetailPage({
   params,
@@ -36,6 +37,18 @@ export default async function BookDetailPage({
         <div className="mt-4">
           <AddToCartButton bookId={book.id} />
         </div>
+      </div>
+
+      <div className="mt-6">
+        {book.status === 'APPROVED' && book.pdfStoragePath ? (
+          <>
+            <h2 className="font-['Fraunces'] text-xl font-semibold mb-2">Preview</h2>
+            <PDFViewer bookId={book.id} preview={true} />
+            <p className="text-sm text-gray-500 mt-2">Showing first 12 pages. Purchase for full access.</p>
+          </>
+        ) : (
+          <p className="text-gray-500">PDF not available for preview</p>
+        )}
       </div>
 
       <ReviewSection bookId={book.id} />
