@@ -2,26 +2,29 @@
 
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 
 export default function Navbar() {
   const { data: session } = useSession();
-  const pathname = usePathname();
-  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
-    if (session) {
-      fetch('/api/cart')
-        .then((res) => res.json())
-        .then((data) => {
-          const count = data?.items?.length || 0;
-          setCartCount(count);
-        })
-        .catch(() => setCartCount(0));
-    } else {
-      setCartCount(0);
-    }
+    if (!session) return;
+
+    const controller = new AbortController();
+
+    fetch('/api/cart', { signal: controller.signal })
+      .then((res) => res.json())
+      .then((data) => {
+        const count = data?.items?.length || 0;
+        const badge = document.getElementById('cart-badge');
+        if (badge) {
+          badge.textContent = count > 0 ? String(count) : '';
+          badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+      })
+      .catch(() => {});
+
+    return () => controller.abort();
   }, [session]);
 
   return (
@@ -38,21 +41,31 @@ export default function Navbar() {
 
           {session ? (
             <>
+              {session.user?.role === 'ADMIN' && (
+                <Link href="/dashboard/admin" className="text-sm hover:underline">
+                  Admin
+                </Link>
+              )}
+              {session.user?.role === 'PUBLISHER' && (
+                <Link href="/dashboard/publisher" className="text-sm hover:underline">
+                  Publisher
+                </Link>
+              )}
+              {session.user?.role === 'READER' && (
+                <Link href="/dashboard/reader" className="text-sm hover:underline">
+                  My Library
+                </Link>
+              )}
               <Link href="/cart" className="relative">
                 <span className="text-xl">🛒</span>
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-2 bg-[#4B5D45] text-[#EFE9DC] text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
+                <span
+                  id="cart-badge"
+                  className="absolute -top-1 -right-2 bg-[#4B5D45] text-[#EFE9DC] text-xs rounded-full w-5 h-5 items-center justify-center hidden"
+                >
+                  0
+                </span>
               </Link>
-              <Link href="/purchases" className="text-sm hover:underline">
-  My Purchases
-</Link>
-              <button
-                onClick={() => signOut()}
-                className="text-sm hover:underline"
-              >
+              <button onClick={() => signOut()} className="text-sm hover:underline">
                 Sign out
               </button>
             </>
@@ -61,7 +74,6 @@ export default function Navbar() {
               Sign in
             </Link>
           )}
-          
         </div>
       </div>
     </nav>
