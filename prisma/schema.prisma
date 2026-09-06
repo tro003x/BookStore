@@ -33,8 +33,9 @@ model User {
   cart         Cart?    // one-to-one with Cart
   purchases    Purchase[]
   reviews Review[]
- 
+ contactUnlocks ContactUnlock[]
 }
+
 
 
 model Publisher {
@@ -117,6 +118,17 @@ model Book {
   purchaseItems PurchaseItem[]
   reviews       Review[]
   paymentStatus PaymentStatus @default(UNPAID)
+}
+
+model ContactUnlock {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileId   String
+  profileType String   // "AUTHOR" or "PUBLISHER"
+  unlockedAt  DateTime @default(now())
+
+  @@unique([userId, profileId, profileType])
 }
 
 enum BookStatus {

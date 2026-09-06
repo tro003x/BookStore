@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   DropdownMenu,
@@ -15,6 +16,7 @@ import { LayoutDashboard, BookOpen, LogOut } from 'lucide-react';
 
 export default function Navbar() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   return (
     <nav className="bg-[#EFE9DC] border-b border-[#C9BFA8] px-4 py-3">
@@ -53,37 +55,44 @@ export default function Navbar() {
                   <DropdownMenuSeparator />
 
                   {session.user?.role === 'ADMIN' && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard/admin" className="flex items-center gap-2 w-full">
-                        <LayoutDashboard className="h-4 w-4" /> Admin Dashboard
-                      </Link>
+                    <DropdownMenuItem
+                      onClick={() => router.push('/dashboard/admin')}
+                      className="flex items-center gap-2 w-full cursor-pointer"
+                    >
+                      <LayoutDashboard className="h-4 w-4" /> Admin Dashboard
                     </DropdownMenuItem>
                   )}
                   {session.user?.role === 'PUBLISHER' && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard/publisher" className="flex items-center gap-2 w-full">
-                        <LayoutDashboard className="h-4 w-4" /> Publisher Dashboard
-                      </Link>
+                    <DropdownMenuItem
+                      onClick={() => router.push('/dashboard/publisher')}
+                      className="flex items-center gap-2 w-full cursor-pointer"
+                    >
+                      <LayoutDashboard className="h-4 w-4" /> Publisher Dashboard
                     </DropdownMenuItem>
                   )}
                   {session.user?.role === 'AUTHOR' && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard/author" className="flex items-center gap-2 w-full">
-                        <LayoutDashboard className="h-4 w-4" /> Author Dashboard
-                      </Link>
+                    <DropdownMenuItem
+                      onClick={() => router.push('/dashboard/author')}
+                      className="flex items-center gap-2 w-full cursor-pointer"
+                    >
+                      <LayoutDashboard className="h-4 w-4" /> Author Dashboard
                     </DropdownMenuItem>
                   )}
                   {session.user?.role === 'READER' && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard/reader" className="flex items-center gap-2 w-full">
-                        <BookOpen className="h-4 w-4" /> My Library
-                      </Link>
+                    <DropdownMenuItem
+                      onClick={() => router.push('/dashboard/reader')}
+                      className="flex items-center gap-2 w-full cursor-pointer"
+                    >
+                      <BookOpen className="h-4 w-4" /> My Library
                     </DropdownMenuItem>
                   )}
 
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => signOut()} className="text-red-600">
-                    <LogOut className="h-4 w-4 mr-2" /> Sign out
+                  <DropdownMenuItem
+                    onClick={() => signOut()}
+                    className="flex items-center gap-2 w-full cursor-pointer text-red-600"
+                  >
+                    <LogOut className="h-4 w-4" /> Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
