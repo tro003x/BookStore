@@ -10,13 +10,13 @@ interface Book {
   author: string;
   price: number;
   status: string;
+  paymentStatus: string;
   category: { name: string };
   createdAt: string;
 }
 
 export default function PublisherDashboard() {
   const { data: session, status } = useSession();
-  console.log('Session role:', session?.user?.role);
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,10 +43,15 @@ export default function PublisherDashboard() {
     }
 
     const fetchBooks = async () => {
-      const res = await fetch('/api/publisher/books');
-      const data = await res.json();
-      setBooks(data);
-      setLoading(false);
+      try {
+        const res = await fetch('/api/publisher/books');
+        const data = await res.json();
+        setBooks(data);
+      } catch (error) {
+        console.error('Fetch error:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     const fetchCategories = async () => {
@@ -83,7 +88,8 @@ export default function PublisherDashboard() {
     });
 
     if (res.ok) {
-      alert('Book submitted for approval!');
+      const book = await res.json();
+      alert('Book created! Pay $10 to submit for approval.');
       setShowForm(false);
       setTitle('');
       setAuthor('');
@@ -91,13 +97,10 @@ export default function PublisherDashboard() {
       setPrice('');
       setPdf(null);
       setCover(null);
-      // Refresh books
-      const fetchBooks = async () => {
-        const res = await fetch('/api/publisher/books');
-        const data = await res.json();
-        setBooks(data);
-      };
-      fetchBooks();
+      // Refresh only books
+      const booksRes = await fetch('/api/publisher/books');
+      const data = await booksRes.json();
+      setBooks(data);
     } else {
       const err = await res.json();
       alert('Error: ' + (err.error || 'Something went wrong'));
@@ -105,11 +108,30 @@ export default function PublisherDashboard() {
     setUploading(false);
   };
 
+  const handlePay = async (bookId: string) => {
+    try {
+      const res = await fetch(`/api/publisher/books/${bookId}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const { url } = await res.json();
+      if (url) {
+        window.location.href = url;
+      } else {
+        alert('Payment failed. Please try again.');
+      }
+    } catch (error) {
+      alert('Payment error. Please try again.');
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'APPROVED': return 'text-green-600';
       case 'PENDING': return 'text-yellow-600';
       case 'REJECTED': return 'text-red-600';
+      case 'DRAFT': return 'text-gray-600';
       default: return 'text-gray-600';
     }
   };
@@ -197,7 +219,7 @@ export default function PublisherDashboard() {
               disabled={uploading}
               className="bg-[#4B5D45] text-white px-6 py-2 rounded hover:opacity-90 disabled:opacity-50"
             >
-              {uploading ? 'Uploading...' : 'Submit for Approval'}
+              {uploading ? 'Uploading...' : 'Create Draft'}
             </button>
           </form>
         )}
@@ -212,10 +234,24 @@ export default function PublisherDashboard() {
                   <h3 className="font-semibold">{book.title}</h3>
                   <p className="text-sm text-gray-600">by {book.author}</p>
                   <p className="text-sm text-gray-500">${Number(book.price).toFixed(2)} • {book.category.name}</p>
+                  {book.status === 'DRAFT' && book.paymentStatus === 'UNPAID' && (
+                    <p className="text-xs text-[#A85C32]">Awaiting payment</p>
+                  )}
+                  {book.status === 'PENDING' && (
+                    <p className="text-xs text-yellow-600">Awaiting admin approval</p>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className={`font-medium ${getStatusColor(book.status)}`}>{book.status}</p>
                   <p className="text-xs text-gray-400">{new Date(book.createdAt).toLocaleDateString()}</p>
+                  {book.status === 'DRAFT' && book.paymentStatus === 'UNPAID' && (
+                    <button
+                      onClick={() => handlePay(book.id)}
+                      className="mt-1 bg-[#A85C32] text-white px-4 py-1 rounded text-sm hover:opacity-90"
+                    >
+                      Pay to Submit ($10)
+                    </button>
+                  )}
                 </div>
               </div>
             ))

@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password } = await request.json();
+    const { name, email, password, role } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
@@ -25,11 +25,37 @@ export async function POST(request: Request) {
         email,
         passwordHash: hashedPassword,
         name: name || null,
-        role: 'READER',
+        role: role || 'READER',
       },
     });
 
-    return NextResponse.json({ message: 'User created' }, { status: 201 });
+    // If role is AUTHOR or PUBLISHER, create profile
+    if (role === 'AUTHOR') {
+      await prisma.author.create({
+        data: {
+          userId: user.id,
+          name: name || '',
+          email: email,
+          verificationStatus: 'PENDING',
+        },
+      });
+    }
+
+    if (role === 'PUBLISHER') {
+      await prisma.publisher.create({
+        data: {
+          userId: user.id,
+          name: name || '',
+          email: email,
+          verificationStatus: 'PENDING',
+        },
+      });
+    }
+
+    return NextResponse.json({ 
+      message: 'User created', 
+      userId: user.id 
+    }, { status: 201 });
   } catch (error) {
     console.error('Signup error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -15,8 +15,8 @@ interface BookCardProps {
   book: {
     id: string;
     title: string;
-    author: string;
-    price: number | { toFixed: (digits: number) => string };
+    authorName: string;
+    price: number;
     coverImageUrl: string | null;
     category: { name: string };
   };
@@ -55,7 +55,7 @@ export default function BookCard({ book }: BookCardProps) {
             {book.title}
           </Link>
         </CardTitle>
-        <p className="text-sm text-[#1A1D1E]/70">{book.author}</p>
+        <p className="text-sm text-[#1A1D1E]/70">{book.authorName}</p>
       </CardHeader>
 
       <CardContent>

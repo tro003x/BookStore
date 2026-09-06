@@ -1,17 +1,25 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
-  try {
-    await prisma.$connect();
-    const books = await prisma.book.findMany({
-      where: { status: 'APPROVED' },
-      include: { category: true, publisher: { select: { name: true } } },
-      orderBy: { title: 'asc' },
-    });
-    return NextResponse.json(books);
-  } catch (error) {
-    console.error('DB error:', error);
-    return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const q = url.searchParams.get('q');
+
+  const where: any = { status: 'APPROVED' };
+
+  if (q) {
+    where.OR = [
+      { title: { contains: q, mode: 'insensitive' } },
+      { authorName: { contains: q, mode: 'insensitive' } },
+      { publisher: { name: { contains: q, mode: 'insensitive' } } },
+    ];
   }
+
+  const books = await prisma.book.findMany({
+    where,
+    include: { category: true, publisher: { select: { name: true } } },
+    orderBy: { title: 'asc' },
+  });
+
+  return NextResponse.json(books);
 }

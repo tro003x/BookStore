@@ -1,14 +1,7 @@
 import { PrismaClient, Role, BookStatus } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 
-// Create the adapter using your DATABASE_URL from environment
-const pool = new Pool({ 
-  connectionString: 'postgresql://postgres:5bl5V7KkCxlCXOrXaa@db.idklhpsivzxcmieoownk.supabase.co:5432/postgres?sslmode=no-verify' 
-});
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
   // 1. Admin user
@@ -63,7 +56,7 @@ async function main() {
     data: [
       {
         title: 'The Great Novel',
-        author: 'John Doe',
+        authorName: 'John Doe',
         description: 'A thrilling story about adventure.',
         price: 14.99,
         status: BookStatus.APPROVED,
@@ -73,7 +66,7 @@ async function main() {
       },
       {
         title: 'Quantum Physics for Beginners',
-        author: 'Dr. Alice',
+        authorName: 'Dr. Alice',
         description: 'Simple introduction to quantum mechanics.',
         price: 29.99,
         status: BookStatus.APPROVED,
@@ -83,7 +76,7 @@ async function main() {
       },
       {
         title: 'The Art of Coding',
-        author: 'Bob Coder',
+        authorName: 'Bob Coder',
         description: 'Learn programming fundamentals.',
         price: 19.99,
         status: BookStatus.APPROVED,
@@ -93,7 +86,7 @@ async function main() {
       },
       {
         title: 'Biography of a Genius',
-        author: 'Jane Writer',
+        authorName: 'Jane Writer',
         description: 'Life story of a famous inventor.',
         price: 12.99,
         status: BookStatus.APPROVED,
@@ -103,6 +96,30 @@ async function main() {
       },
     ],
   });
+
+  // Author user
+const authorPassword = await bcrypt.hash('author123', 10);
+const authorUser = await prisma.user.upsert({
+  where: { email: 'author@example.com' },
+  update: {},
+  create: {
+    email: 'author@example.com',
+    passwordHash: authorPassword,
+    name: 'Test Author',
+    role: 'AUTHOR',
+  },
+});
+
+const author = await prisma.author.upsert({
+  where: { userId: authorUser.id },
+  update: {},
+  create: {
+    userId: authorUser.id,
+    name: 'Test Author',
+    email: 'author@example.com',
+    verificationStatus: 'APPROVED',
+  },
+});
 
   // 5. Reader user
   const readerPassword = await bcrypt.hash('reader123', 10);
@@ -121,10 +138,5 @@ async function main() {
 }
 
 main()
-  .catch(e => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(e => console.error(e))
+  .finally(() => prisma.$disconnect());

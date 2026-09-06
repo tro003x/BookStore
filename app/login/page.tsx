@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -10,6 +10,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const role = searchParams.get('role') || 'READER';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,11 +24,7 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      if (result.error.includes('verify')) {
-        setError('Please verify your email first. Check your inbox.');
-      } else {
-        setError('Invalid email or password');
-      }
+      setError('Invalid email or password');
     } else {
       router.push('/');
     }
@@ -81,15 +79,15 @@ export default function LoginPage() {
           </div>
         </div>
 
-       <button
-  onClick={() => signIn('google', { callbackUrl: '/' })}
-  className="w-full border border-[#C9BFA8] py-2 rounded-lg hover:bg-[#EFE9DC] transition flex items-center justify-center gap-2"
->
-  <span>Continue with Google</span>
-</button>
+        <button
+          onClick={() => signIn('google', { callbackUrl: '/' })}
+          className="w-full border border-[#C9BFA8] py-2 rounded-lg hover:bg-[#EFE9DC] transition flex items-center justify-center gap-2"
+        >
+          <span>Continue with Google</span>
+        </button>
 
         <p className="text-center text-sm mt-6 text-[#1A1D1E]/60">
-          Don`t have an account?{' '}
+          Don't have an account?{' '}
           <Link href="/signup" className="text-[#4B5D45] hover:underline">
             Create Account
           </Link>
