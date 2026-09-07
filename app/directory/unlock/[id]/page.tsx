@@ -80,7 +80,18 @@ export default function UnlockPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId }),
-        });
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              console.log('Unlock record created');
+            } else {
+              console.error('Unlock failed:', data.error);
+            }
+          })
+          .catch((err) => {
+            console.error('Unlock error:', err);
+          });
       }
     }
   }, [paid, session, searchParams]);
