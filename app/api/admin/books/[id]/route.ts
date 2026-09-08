@@ -3,12 +3,16 @@ import { getUserFromRequest } from '@/lib/getUser';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
 
-export async function POST(req: Request) {
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const user = await getUserFromRequest(req);
   if (!user || user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  const { id } = await params;
   const formData = await req.formData();
   const title = formData.get('title') as string;
   const author = formData.get('author') as string;
@@ -22,45 +26,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  let pdfPath = null;
+  const updateData: any = {
+    title,
+    author,
+    description,
+    price,
+    categoryId,
+  };
+
   if (pdf) {
-    pdfPath = `books/${Date.now()}-${pdf.name}`;
+    const pdfPath = `books/${Date.now()}-${pdf.name}`;
     const { error } = await supabase.storage.from('books').upload(pdfPath, pdf);
-    if (error) {
-      return NextResponse.json({ error: 'PDF upload failed' }, { status: 500 });
+    if (!error) {
+      updateData.pdfStoragePath = pdfPath;
     }
   }
 
-  let coverUrl = null;
   if (cover) {
     const coverPath = `covers/${Date.now()}-${cover.name}`;
     const { error } = await supabase.storage.from('covers').upload(coverPath, cover);
     if (!error) {
       const { data } = supabase.storage.from('covers').getPublicUrl(coverPath);
-      coverUrl = data.publicUrl;
+      updateData.coverImageUrl = data.publicUrl;
     }
   }
 
-  // Find a default publisher (first one) for admin-created books
-  const publisher = await prisma.publisher.findFirst();
-  if (!publisher) {
-    return NextResponse.json({ error: 'No publisher found' }, { status: 400 });
-  }
-
-  const book = await prisma.book.create({
-    data: {
-      title,
-      author,
-      description,
-      price,
-      status: 'APPROVED', // admin creates approved directly
-      paymentStatus: 'PAID', // admin-created don't need payment
-      publisherId: publisher.id,
-      categoryId,
-      pdfStoragePath: pdfPath,
-      coverImageUrl: coverUrl,
-    },
+  const book = await prisma.book.update({
+    where: { id },
+    data: updateData,
   });
 
-  return NextResponse.json(book, { status: 201 });
+  return NextResponse.json(book);
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await getUserFromRequest(req);
+  if (!user || user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  const { id } = await params;
+  await prisma.book.delete({ where: { id } });
+
+  return NextResponse.json({ success: true });
 }

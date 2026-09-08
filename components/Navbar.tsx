@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import {
   DropdownMenu,
@@ -17,6 +17,12 @@ import { LayoutDashboard, BookOpen, LogOut } from 'lucide-react';
 export default function Navbar() {
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Hide navbar on dashboard pages
+  if (pathname?.startsWith('/dashboard')) {
+    return null;
+  }
 
   return (
     <nav className="bg-[#EFE9DC] border-b border-[#C9BFA8] px-4 py-3">

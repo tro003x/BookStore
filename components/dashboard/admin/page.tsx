@@ -3,17 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import { Users, BookOpen, DollarSign, Clock } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Users, BookOpen, CheckCircle, DollarSign, Clock } from 'lucide-react';
 
 interface Stats {
   totalBooks: number;
@@ -22,7 +14,6 @@ interface Stats {
   pendingBooks: number;
   pendingPublishers: number;
   pendingVerification: number;
-  chartData: { date: string; amount: number }[];
 }
 
 export default function AdminDashboardPage() {
@@ -58,11 +49,9 @@ export default function AdminDashboardPage() {
 
   if (loading) return <div className="p-8">Loading...</div>;
 
-  const pendingTotal = (stats?.pendingBooks || 0) + (stats?.pendingPublishers || 0) + (stats?.pendingVerification || 0);
-
   return (
     <div>
-      {/* Stats cards */}
+      {/* Quick action cards – replaced by stat cards below */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <Card className="border-[#E5E7EB]">
           <CardContent className="p-5 flex items-start justify-between">
@@ -100,34 +89,27 @@ export default function AdminDashboardPage() {
           <CardContent className="p-5 flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-[#6B7280]">Pending Approvals</p>
-              <p className="text-2xl font-semibold text-[#0C0A00]">{pendingTotal}</p>
+              <p className="text-2xl font-semibold text-[#0C0A00]">
+                {(stats?.pendingBooks || 0) + (stats?.pendingPublishers || 0) + (stats?.pendingVerification || 0)}
+              </p>
             </div>
             <Clock className="h-5 w-5 text-[#DC2626]" />
           </CardContent>
         </Card>
       </div>
 
-      {/* Chart */}
-      {stats?.chartData && stats.chartData.length > 0 && (
-        <Card className="border-[#E5E7EB]">
-          <CardHeader>
-            <CardTitle className="font-['Fraunces'] text-lg">Monthly Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="amount" fill="#2DD4BF" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Additional info: pending counts as badges */}
+      <div className="flex flex-wrap gap-4">
+        <Badge variant="outline" className="bg-white border-[#E5E7EB]">
+          Pending Books: {stats?.pendingBooks || 0}
+        </Badge>
+        <Badge variant="outline" className="bg-white border-[#E5E7EB]">
+          Pending Publishers: {stats?.pendingPublishers || 0}
+        </Badge>
+        <Badge variant="outline" className="bg-white border-[#E5E7EB]">
+          Pending Verification: {stats?.pendingVerification || 0}
+        </Badge>
+      </div>
     </div>
   );
 }

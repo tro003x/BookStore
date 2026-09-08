@@ -3,19 +3,20 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BookOpen, ShoppingBag } from 'lucide-react';
 
-interface Book {
-  id: string;
-  title: string;
-  price: number;
-  status: string;
-  _count?: { purchaseItems: number };
+interface Stats {
+  totalBooks: number;
+  totalCopiesSold: number;
+  chartData: { month: string; count: number }[];
 }
 
-export default function AuthorDashboard() {
+export default function AuthorDashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [books, setBooks] = useState<Book[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,55 +30,66 @@ export default function AuthorDashboard() {
       return;
     }
 
-    const fetchBooks = async () => {
+    const fetchStats = async () => {
       try {
-        const res = await fetch('/api/author/books');
+        const res = await fetch('/api/author/dashboard-stats');
         const data = await res.json();
-        setBooks(data);
+        setStats(data);
       } catch (error) {
-        console.error('Fetch error:', error);
+        console.error('Stats error:', error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchBooks();
+    fetchStats();
   }, [status, session, router]);
 
   if (loading) return <div className="p-8">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-[#EFE9DC] p-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="font-['Fraunces'] text-3xl font-semibold mb-6">Author Dashboard</h1>
+    <div>
+      <div className="grid gap-4 md:grid-cols-2 mb-6">
+        <Card className="border-[#E5E7EB]">
+          <CardContent className="p-5 flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-[#6B7280]">Total Books</p>
+              <p className="text-2xl font-semibold text-[#0C0A00]">{stats?.totalBooks || 0}</p>
+            </div>
+            <BookOpen className="h-5 w-5 text-[#2DD4BF]" />
+          </CardContent>
+        </Card>
 
-        <div className="bg-white p-6 rounded shadow mb-6">
-          <h2 className="font-['Fraunces'] text-xl font-semibold mb-2">Welcome, {session?.user?.name}</h2>
-          <p className="text-sm text-[#1A1D1E]/60">Manage your books and track sales.</p>
-        </div>
-
-        <h2 className="font-['Fraunces'] text-xl font-semibold mb-4">Your Books</h2>
-        {books.length === 0 ? (
-          <p>No books found.</p>
-        ) : (
-          <div className="space-y-3">
-            {books.map((book) => (
-              <div key={book.id} className="bg-white p-4 rounded shadow flex justify-between items-center">
-                <div>
-                  <h3 className="font-semibold">{book.title}</h3>
-                  <p className="text-sm text-gray-600">${Number(book.price).toFixed(2)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">Copies sold: {book._count?.purchaseItems || 0}</p>
-                  <p className={`text-sm font-medium ${book.status === 'APPROVED' ? 'text-green-600' : 'text-yellow-600'}`}>
-                    {book.status}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <Card className="border-[#E5E7EB]">
+          <CardContent className="p-5 flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-[#6B7280]">Copies Sold</p>
+              <p className="text-2xl font-semibold text-[#0C0A00]">{stats?.totalCopiesSold || 0}</p>
+            </div>
+            <ShoppingBag className="h-5 w-5 text-[#2DD4BF]" />
+          </CardContent>
+        </Card>
       </div>
+
+      {stats?.chartData && stats.chartData.length > 0 && (
+        <Card className="border-[#E5E7EB]">
+          <CardHeader>
+            <CardTitle className="font-['Fraunces'] text-lg">Copies Sold Over Time</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stats.chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#2DD4BF" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
