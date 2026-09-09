@@ -5,13 +5,28 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import StatusBadge from '@/components/dashboard/StatusBadge';
 import BookForm from '@/components/BookForm';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 
 interface Book {
+  categoryId: string;
   id: string;
   title: string;
   author: string;
@@ -23,6 +38,11 @@ interface Book {
   pdfStoragePath: string | null;
 }
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 export default function ManageBooksPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -32,7 +52,7 @@ export default function ManageBooksPage() {
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState<string | null>(null);
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -52,12 +72,15 @@ export default function ManageBooksPage() {
         fetch('/api/admin/books/manage'),
         fetch('/api/categories'),
       ]);
+      if (!booksRes.ok) throw new Error('Failed to fetch books');
+      if (!categoriesRes.ok) throw new Error('Failed to fetch categories');
       const booksData = await booksRes.json();
       const categoriesData = await categoriesRes.json();
       setBooks(booksData);
       setCategories(categoriesData);
     } catch (error) {
       console.error('Fetch error:', error);
+      alert('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -83,34 +106,32 @@ export default function ManageBooksPage() {
     const url = isEdit ? `/api/admin/books/${editingBook.id}` : '/api/admin/books';
     const method = isEdit ? 'PUT' : 'POST';
 
-    const res = await fetch(url, {
-      method,
-      body: formData,
-    });
-
-    if (res.ok) {
+    try {
+      const res = await fetch(url, { method, body: formData });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to save');
+      }
       setDialogOpen(false);
       fetchData();
-    } else {
-      const err = await res.json();
-      alert('Error: ' + (err.error || 'Something went wrong'));
+    } catch (err: any) {
+      alert(err.message || 'Something went wrong');
     }
   };
 
   const confirmDelete = async () => {
     if (!bookToDelete) return;
-    const res = await fetch(`/api/admin/books/${bookToDelete}`, {
-      method: 'DELETE',
-    });
-    if (res.ok) {
+    try {
+      const res = await fetch(`/api/admin/books/${bookToDelete}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
       setDeleteDialogOpen(false);
       fetchData();
-    } else {
-      alert('Failed to delete book');
+    } catch (err: any) {
+      alert(err.message || 'Delete failed');
     }
   };
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   return (
     <div>
@@ -121,7 +142,7 @@ export default function ManageBooksPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-md border border-[#E5E7EB]">
+      <div className="bg-white rounded-md border border-[#E5E7EB] overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -135,34 +156,42 @@ export default function ManageBooksPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {books.map((b) => (
-              <TableRow key={b.id}>
-                <TableCell className="font-medium">{b.title}</TableCell>
-                <TableCell>{b.author}</TableCell>
-                <TableCell>{b.category.name}</TableCell>
-                <TableCell>{b.publisher.name}</TableCell>
-                <TableCell>${Number(b.price).toFixed(2)}</TableCell>
-                <TableCell><StatusBadge status={b.status} /></TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEditBook(b)}
-                    className="h-8 w-8 text-[#6B7280] hover:text-[#0C0A00]"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteBook(b.id)}
-                    className="h-8 w-8 text-[#6B7280] hover:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+            {books.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-[#6B7280]">
+                  No books found.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              books.map((b) => (
+                <TableRow key={b.id}>
+                  <TableCell className="font-medium">{b.title}</TableCell>
+                  <TableCell>{b.author}</TableCell>
+                  <TableCell>{b.category.name}</TableCell>
+                  <TableCell>{b.publisher.name}</TableCell>
+                  <TableCell>${Number(b.price).toFixed(2)}</TableCell>
+                  <TableCell><StatusBadge status={b.status as any} /></TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEditBook(b)}
+                      className="h-8 w-8 text-[#6B7280] hover:text-[#0C0A00]"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteBook(b.id)}
+                      className="h-8 w-8 text-[#6B7280] hover:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
@@ -176,7 +205,15 @@ export default function ManageBooksPage() {
             </DialogTitle>
           </DialogHeader>
           <BookForm
-            initialData={editingBook ? { ...editingBook, price: Number(editingBook.price), categoryId: editingBook.categoryId } : undefined}
+            initialData={
+              editingBook
+                ? {
+                    ...editingBook,
+                    price: Number(editingBook.price),
+                    categoryId: editingBook.categoryId,
+                  }
+                : undefined
+            }
             onSubmit={handleSubmit}
             submitLabel={editingBook ? 'Update Book' : 'Create Book'}
             categories={categories}
@@ -184,7 +221,7 @@ export default function ManageBooksPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

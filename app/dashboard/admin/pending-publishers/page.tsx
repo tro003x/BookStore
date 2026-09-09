@@ -4,24 +4,24 @@ import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/dashboard/StatusBadge';
 import { revalidatePath } from 'next/cache';
 
-export default async function AdminPublishersPage() {
+export default async function PendingPublishersPage() {
   const publishers = await prisma.publisher.findMany({
-    include: { user: { select: { email: true } } },
-    orderBy: { createdAt: 'desc' },
+    where: { verificationStatus: 'PENDING' },
+    include: { user: { select: { email: true, name: true } } },
   });
 
-  async function approvePublisher(id: string) {
+  async function handleVerify(id: string, status: 'APPROVED' | 'REJECTED') {
     'use server';
     await prisma.publisher.update({
       where: { id },
-      data: { approved: true },
+      data: { verificationStatus: status },
     });
-    revalidatePath('/dashboard/admin/publishers');
+    revalidatePath('/dashboard/admin/pending-publishers');
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-4">Publishers</h1>
+      <h1 className="text-2xl font-semibold mb-4">Pending Publishers (Verification)</h1>
       <div className="bg-white rounded-md border border-[#E5E7EB]">
         <Table>
           <TableHeader>
@@ -37,15 +37,18 @@ export default async function AdminPublishersPage() {
               <TableRow key={p.id}>
                 <TableCell className="font-medium">{p.name}</TableCell>
                 <TableCell>{p.user.email}</TableCell>
-                <TableCell><StatusBadge status={p.approved ? 'APPROVED' : 'PENDING'} /></TableCell>
-                <TableCell className="text-right">
-                  {!p.approved && (
-                    <form action={approvePublisher.bind(null, p.id)}>
-                      <Button size="sm" className="bg-[#2DD4BF] text-white hover:bg-[#2DD4BF]/80">
-                        Approve
-                      </Button>
-                    </form>
-                  )}
+                <TableCell><StatusBadge status="PENDING" /></TableCell>
+                <TableCell className="text-right space-x-2">
+                  <form action={handleVerify.bind(null, p.id, 'APPROVED')} className="inline">
+                    <Button type="submit" size="sm" className="bg-[#16A34A] text-white hover:bg-[#16A34A]/80">
+                      Approve
+                    </Button>
+                  </form>
+                  <form action={handleVerify.bind(null, p.id, 'REJECTED')} className="inline">
+                    <Button type="submit" size="sm" variant="outline" className="border-[#DC2626] text-[#DC2626] hover:bg-[#DC2626]/10">
+                      Reject
+                    </Button>
+                  </form>
                 </TableCell>
               </TableRow>
             ))}

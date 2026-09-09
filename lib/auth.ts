@@ -57,6 +57,16 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role;
         token.id = user.id;
+      } else if (token.email) {
+        // Fallback: fetch role from DB if token missing role (e.g., after refresh)
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email as string },
+          select: { role: true, id: true },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.id = dbUser.id;
+        }
       }
       return token;
     },

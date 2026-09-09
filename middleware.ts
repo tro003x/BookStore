@@ -6,22 +6,28 @@ export default withAuth(
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
 
-    console.log('Middleware - path:', path);
-    console.log('Middleware - token:', token);
-    console.log('Middleware - role:', token?.role);
+    // If token is missing, let authorized callback handle it (redirect to login)
+    if (!token) return NextResponse.next();
 
-    if (path.startsWith('/dashboard/admin')) {
-      if (token?.role !== 'ADMIN') {
-        console.log('Redirecting to / - not admin');
-        return NextResponse.redirect(new URL('/', req.url));
-      }
+    // Role-based protection (only redirect if token has a role and it's wrong)
+    if (path.startsWith('/dashboard/admin') && token.role !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+    if (path.startsWith('/dashboard/publisher') && token.role !== 'PUBLISHER') {
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+    if (path.startsWith('/dashboard/author') && token.role !== 'AUTHOR') {
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+    if (path.startsWith('/dashboard/reader') && token.role !== 'READER') {
+      return NextResponse.redirect(new URL('/', req.url));
     }
 
     return NextResponse.next();
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token }) => !!token, // Ensure user is logged in for any dashboard route
     },
   }
 );

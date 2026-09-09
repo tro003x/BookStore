@@ -4,60 +4,47 @@ import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/dashboard/StatusBadge';
 import { revalidatePath } from 'next/cache';
 
-export default async function PendingBooksPage() {
-  const books = await prisma.book.findMany({
-    where: { status: 'PENDING' },
-    include: { category: true, publisher: { select: { name: true } } },
+export default async function PendingAuthorsPage() {
+  const authors = await prisma.author.findMany({
+    where: { verificationStatus: 'PENDING' },
+    include: { user: { select: { email: true, name: true } } },
   });
 
-  async function handleApprove(id: string) {
+  async function handleVerify(id: string, status: 'APPROVED' | 'REJECTED') {
     'use server';
-    await prisma.book.update({
+    await prisma.author.update({
       where: { id },
-      data: { status: 'APPROVED', publishedAt: new Date() },
+      data: { verificationStatus: status },
     });
-    revalidatePath('/dashboard/admin/books');
-  }
-
-  async function handleReject(id: string) {
-    'use server';
-    await prisma.book.update({
-      where: { id },
-      data: { status: 'REJECTED' },
-    });
-    revalidatePath('/dashboard/admin/books');
+    revalidatePath('/dashboard/admin/pending-authors');
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-4">Pending Books</h1>
+      <h1 className="text-2xl font-semibold mb-4">Pending Authors (Verification)</h1>
       <div className="bg-white rounded-md border border-[#E5E7EB]">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Author</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Publisher</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {books.map((b) => (
-              <TableRow key={b.id}>
-                <TableCell className="font-medium">{b.title}</TableCell>
-                <TableCell>{b.authorName}</TableCell>
-                <TableCell>{b.category.name}</TableCell>
-                <TableCell>{b.publisher.name}</TableCell>
+            {authors.map((a) => (
+              <TableRow key={a.id}>
+                <TableCell className="font-medium">{a.name}</TableCell>
+                <TableCell>{a.user.email}</TableCell>
                 <TableCell><StatusBadge status="PENDING" /></TableCell>
                 <TableCell className="text-right space-x-2">
-                  <form action={handleApprove.bind(null, b.id)} className="inline">
+                  <form action={handleVerify.bind(null, a.id, 'APPROVED')} className="inline">
                     <Button type="submit" size="sm" className="bg-[#16A34A] text-white hover:bg-[#16A34A]/80">
                       Approve
                     </Button>
                   </form>
-                  <form action={handleReject.bind(null, b.id)} className="inline">
+                  <form action={handleVerify.bind(null, a.id, 'REJECTED')} className="inline">
                     <Button type="submit" size="sm" variant="outline" className="border-[#DC2626] text-[#DC2626] hover:bg-[#DC2626]/10">
                       Reject
                     </Button>

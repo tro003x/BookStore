@@ -30,15 +30,17 @@ export default function AppSidebar({ collapsed }: { collapsed: boolean }) {
   const getNavItems = (): NavItem[] => {
     const role = session?.user?.role;
     switch (role) {
-      case 'ADMIN':
-        return [
-          { title: 'Dashboard', href: '/dashboard/admin', icon: LayoutDashboard },
-          { title: 'Authors', href: '/dashboard/admin/authors', icon: UserCheck },
-          { title: 'Publishers', href: '/dashboard/admin/publishers', icon: Users },
-          { title: 'Books', href: '/dashboard/admin/books', icon: BookOpen },
-          { title: 'Verification', href: '/dashboard/admin/verification', icon: FileCheck },
-          { title: 'Manage Books', href: '/dashboard/admin/manage-books', icon: BookOpen },
-        ];
+    case 'ADMIN':
+  return [
+    { title: 'Dashboard', href: '/dashboard/admin', icon: LayoutDashboard },
+    { title: 'Manage Books', href: '/dashboard/admin/manage-books', icon: BookOpen },
+    { title: 'Manage Authors', href: '/dashboard/admin/manage-authors', icon: UserCheck },
+    { title: 'Manage Publishers', href: '/dashboard/admin/manage-publishers', icon: Users },
+    { title: 'Pending Books', href: '/dashboard/admin/books', icon: BookOpen },
+    { title: 'Pending Authors', href: '/dashboard/admin/pending-authors', icon: FileCheck },
+    { title: 'Pending Publishers', href: '/dashboard/admin/pending-publishers', icon: FileCheck },
+    
+  ];
       case 'PUBLISHER':
         return [
           { title: 'Dashboard', href: '/dashboard/publisher', icon: LayoutDashboard },
