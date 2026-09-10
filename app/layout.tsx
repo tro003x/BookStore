@@ -3,6 +3,7 @@ import "./globals.css";
 import Providers from "./providers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
+import MainWrapper from "@/components/MainWrapper";
 import '@fontsource/fraunces';
 import '@fontsource/inter';
 import '@fontsource/ibm-plex-mono';
@@ -19,10 +20,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-[#EFE9DC] text-[#1A1D1E] min-h-screen flex flex-col">
+      <body className="bg-[#F5F2EC] text-[#1A1D1E] min-h-screen flex flex-col">
         <Providers>
           <Navbar />
-          <main className="flex-1 pt-24">{children}</main>
+          <MainWrapper>{children}</MainWrapper>
           <Footer />
         </Providers>
       </body>

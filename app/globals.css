@@ -4,43 +4,47 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Base */
   --ink: #1A1D1E;
-  --parchment: #EFE9DC;
-  --moss: #4B5D45;
-  --clay: #A85C32;
-  --rule: #C9BFA8;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --parchment: #F5F2EC;    /* cleaner warm off-white */
+  --cloud: #FFFFFF;
+
+  /* Accents */
+  --teal: #14B8A6;         /* primary accent — buttons, links, active */
+  --teal-dark: #0D9488;    /* hover state */
+  --teal-soft: #CCFBF1;    /* soft bg for badges/active nav */
+  --amber: #C97B3C;        /* price, buy now, secondary accent */
+  --amber-soft: #F5E6D8;
+
+  /* Utility */
+  --rule: #E5E7EB;         /* borders, dividers */
+  --muted: #6B7280;
+  --success: #16A34A;
+  --destructive: #DC2626;
+
+  /* Shadcn mapping */
+  --background: #F5F2EC;
+  --foreground: #1A1D1E;
+  --card: #FFFFFF;
+  --card-foreground: #1A1D1E;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1D1E;
+  --primary: #14B8A6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5E6D8;
+  --secondary-foreground: #1A1D1E;
+  --muted-foreground: #6B7280;
+  --accent: #CCFBF1;
+  --accent-foreground: #0D9488;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #14B8A6;
+  --radius: 0.75rem;
+
+  /* Backgrounds to change app-wide */
+  --body-bg: #F5F2EC;
 }
 
 body {

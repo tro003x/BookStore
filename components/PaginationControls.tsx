@@ -24,51 +24,30 @@ export default function PaginationControls({
   } else if (currentPage <= 3) {
     pages.push(1, 2, 3, 4, 'ellipsis', totalPages);
   } else if (currentPage >= totalPages - 2) {
-    pages.push(
-      1,
-      'ellipsis',
-      totalPages - 3,
-      totalPages - 2,
-      totalPages - 1,
-      totalPages
-    );
+    pages.push(1, 'ellipsis', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
   } else {
-    pages.push(
-      1,
-      'ellipsis',
-      currentPage - 1,
-      currentPage,
-      currentPage + 1,
-      'ellipsis',
-      totalPages
-    );
+    pages.push(1, 'ellipsis', currentPage - 1, currentPage, currentPage + 1, 'ellipsis', totalPages);
   }
 
   const linkBase =
-    'inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md text-sm font-medium transition-colors h-9 px-4 py-2 hover:bg-[#F5F6F7]';
-  const activeClass = 'bg-[#1A1D1E] text-white hover:bg-[#1A1D1E]/90';
-  const disabledClass = 'pointer-events-none opacity-50';
+    'inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-lg text-sm font-medium transition-colors h-9 px-4 py-2 border border-[#E5E7EB] bg-white hover:bg-[#F5F2EC]';
+  const activeClass = 'bg-[#14B8A6] text-white border-[#14B8A6] hover:bg-[#0D9488]';
+  const disabledClass = 'pointer-events-none opacity-40';
 
   return (
     <Pagination className="mt-10">
       <PaginationContent>
-        {/* Previous */}
         <PaginationItem>
           <Link
             href={currentPage > 1 ? `/?page=${currentPage - 1}` : '#'}
             aria-label="Go to previous page"
-            className={cn(
-              linkBase,
-              'gap-1 pl-2.5',
-              currentPage === 1 && disabledClass
-            )}
+            className={cn(linkBase, 'gap-1 pl-2.5', currentPage === 1 && disabledClass)}
           >
             <ChevronLeft className="h-4 w-4" />
             <span>Previous</span>
           </Link>
         </PaginationItem>
 
-        {/* Page numbers */}
         {pages.map((page, idx) =>
           page === 'ellipsis' ? (
             <PaginationItem key={`ellipsis-${idx}`}>
@@ -79,10 +58,7 @@ export default function PaginationControls({
               <Link
                 href={`/?page=${page}`}
                 aria-current={page === currentPage ? 'page' : undefined}
-                className={cn(
-                  linkBase,
-                  page === currentPage && activeClass
-                )}
+                className={cn(linkBase, page === currentPage && activeClass)}
               >
                 {page}
               </Link>
@@ -90,16 +66,11 @@ export default function PaginationControls({
           )
         )}
 
-        {/* Next */}
         <PaginationItem>
           <Link
             href={currentPage < totalPages ? `/?page=${currentPage + 1}` : '#'}
             aria-label="Go to next page"
-            className={cn(
-              linkBase,
-              'gap-1 pr-2.5',
-              currentPage === totalPages && disabledClass
-            )}
+            className={cn(linkBase, 'gap-1 pr-2.5', currentPage === totalPages && disabledClass)}
           >
             <span>Next</span>
             <ChevronRight className="h-4 w-4" />

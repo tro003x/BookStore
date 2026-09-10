@@ -9,7 +9,8 @@ export default function AddToCartButton({ bookId }: { bookId: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const handleAdd = async () => {
+  const handleAdd = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (status === 'loading') return;
     if (!session) {
       router.push('/login');
@@ -34,7 +35,8 @@ export default function AddToCartButton({ bookId }: { bookId: string }) {
     }
   };
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!session) {
       router.push('/login');
       return;
@@ -55,17 +57,17 @@ export default function AddToCartButton({ bookId }: { bookId: string }) {
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 justify-center w-full">
       <button
         onClick={handleAdd}
         disabled={loading}
-        className="bg-[#4B5D45] text-white px-3 py-1 rounded text-sm hover:opacity-90 disabled:opacity-50"
+        className="bg-[#4B5D45] hover:bg-[#3E4C39] hover:-translate-y-0.5 hover:shadow-md text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50"
       >
         {loading ? 'Adding...' : 'Add to cart'}
       </button>
       <button
         onClick={handleBuyNow}
-        className="bg-[#A85C32] text-white px-3 py-1 rounded text-sm hover:opacity-90"
+        className="bg-[#A85C32] hover:bg-[#8F4D2A] hover:-translate-y-0.5 hover:shadow-md text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
       >
         Buy Now
       </button>

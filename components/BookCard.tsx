@@ -1,11 +1,14 @@
-import Link from 'next/link';
+'use client';
+
+import { useRouter } from 'next/navigation';
 import AddToCartButton from './AddToCartButton';
+import StarRating from './StarRating';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 const categoryColors: Record<string, string> = {
-  Science: '#4B5D45',
-  Fiction: '#A85C32',
+  Science: '#14B8A6',
+  Fiction: '#C97B3C',
   Biography: '#7A5C8F',
   'Self-Help': '#3C6E8F',
   History: '#8F6B3C',
@@ -19,15 +22,25 @@ interface BookCardProps {
     price: number;
     coverImageUrl: string | null;
     category: { name: string };
+    averageRating?: number;
+    reviewCount?: number;
   };
 }
 
 export default function BookCard({ book }: BookCardProps) {
-  const color = categoryColors[book.category.name] || '#4B5D45';
-  const price = typeof book.price === 'number' ? book.price : parseFloat(book.price.toString());
+  const router = useRouter();
+  const color = categoryColors[book.category.name] || '#14B8A6';
+  const price = typeof book.price === 'number' ? book.price : parseFloat(String(book.price));
+
+  const handleCardClick = () => {
+    router.push(`/book/${book.id}`);
+  };
 
   return (
-    <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-shadow">
+    <Card
+      onClick={handleCardClick}
+      className="overflow-hidden border border-[#E5E7EB] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 bg-white cursor-pointer flex flex-col"
+    >
       <div className="relative">
         <AspectRatio ratio={16 / 9}>
           {book.coverImageUrl ? (
@@ -38,33 +51,40 @@ export default function BookCard({ book }: BookCardProps) {
               className="object-cover w-full h-full"
             />
           ) : (
-            <div className="w-full h-full bg-[#C9BFA8] flex items-center justify-center text-[#1A1D1E]/50">
+            <div className="w-full h-full bg-[#F5F2EC] flex items-center justify-center text-[#6B7280] text-sm">
               No cover
             </div>
           )}
         </AspectRatio>
         <div
-          className="absolute left-0 top-0 w-2 h-full"
+          className="absolute left-0 top-0 w-1 h-full"
           style={{ backgroundColor: color }}
         />
       </div>
 
       <CardHeader className="pb-2">
-        <CardTitle className="font-['Fraunces'] text-lg line-clamp-1">
-          <Link href={`/book/${book.id}`} className="hover:underline">
-            {book.title}
-          </Link>
+        <CardTitle className="font-['Fraunces'] text-lg line-clamp-1 hover:text-[#14B8A6] transition-colors">
+          {book.title}
         </CardTitle>
-        <p className="text-sm text-[#1A1D1E]/70">{book.authorName}</p>
+        <p className="text-sm text-[#6B7280]">{book.authorName}</p>
+        <div className="pt-1">
+          <StarRating
+            rating={book.averageRating || 0}
+            count={book.reviewCount || 0}
+          />
+        </div>
       </CardHeader>
 
-      <CardContent>
-        <p className="font-['IBM_Plex_Mono'] text-[#A85C32] font-bold">
+      <CardContent className="flex-1">
+        <p className="font-['IBM_Plex_Mono'] text-[#C97B3C] font-bold text-lg">
           ${price.toFixed(2)}
         </p>
       </CardContent>
 
-      <CardFooter className="flex gap-2 pt-0">
+      <CardFooter
+        className="flex justify-center gap-2 pt-3 pb-4 bg-white border-t border-[#F5F2EC]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <AddToCartButton bookId={book.id} />
       </CardFooter>
     </Card>

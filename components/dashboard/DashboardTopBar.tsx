@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Dialog,
@@ -10,8 +10,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { LogOut, User, Mail, Phone, PanelLeft } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { LogOut, Mail, Phone, PanelLeft, Home } from 'lucide-react';
 
 export default function DashboardTopBar({
   collapsed,
@@ -22,6 +30,7 @@ export default function DashboardTopBar({
 }) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
 
   const crumbs = pathname.split('/').filter(Boolean);
@@ -50,18 +59,32 @@ export default function DashboardTopBar({
           </h2>
         </div>
 
-        <button
-          onClick={() => setProfileOpen(true)}
-          className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-[#F5F6F7] transition-colors cursor-pointer"
-        >
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-[#0C0A00] text-white">
-              {userName[0] || 'U'}
-            </AvatarFallback>
-          </Avatar>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Back to Store */}
+          <Button
+            variant="outline"
+            onClick={() => router.push('/')}
+            className="border-[#E5E7EB] text-[#0C0A00] hover:bg-[#F5F2EC] flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            <span className="hidden md:inline">Back to Store</span>
+          </Button>
+
+          {/* Avatar */}
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-[#F5F6F7] transition-colors cursor-pointer"
+          >
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-[#0C0A00] text-white">
+                {userName[0] || 'U'}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        </div>
       </header>
 
+      {/* Profile Dialog */}
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
