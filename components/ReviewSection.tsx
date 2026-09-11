@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Star } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Review {
   id: string;
@@ -34,7 +35,7 @@ export default function ReviewSection({ bookId }: { bookId: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) {
-      alert('Please login to review');
+      toast.error('Please login to review');
       return;
     }
 
@@ -46,6 +47,7 @@ export default function ReviewSection({ bookId }: { bookId: string }) {
     });
 
     if (res.ok) {
+      toast.success('Review submitted');
       setText('');
       setRating(5);
       const refreshRes = await fetch(`/api/reviews?bookId=${bookId}`);
@@ -53,12 +55,11 @@ export default function ReviewSection({ bookId }: { bookId: string }) {
       setReviews(data);
     } else {
       const err = await res.json();
-      alert(err.error || 'Failed to submit review');
+      toast.error(err.error || 'Failed to submit review');
     }
     setSubmitting(false);
   };
 
-  // --- Computed stats ---
   const totalReviews = reviews.length;
   const averageRating =
     totalReviews > 0
@@ -79,11 +80,10 @@ export default function ReviewSection({ bookId }: { bookId: string }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
-          className={`${size} ${
-            i <= Math.round(value)
+          className={`${size} ${i <= Math.round(value)
               ? 'fill-[#F59E0B] text-[#F59E0B]'
               : 'text-[#D1D5DB]'
-          }`}
+            }`}
         />
       ))}
     </div>
@@ -95,12 +95,13 @@ export default function ReviewSection({ bookId }: { bookId: string }) {
   };
 
   if (loading) {
-    return (
-      <div className="bg-white rounded-lg border border-[#E5E7EB] p-8 text-center text-sm text-[#6B7280]">
-        Loading reviews...
-      </div>
-    );
-  }
+  return (
+    <div className="bg-white rounded-lg border border-[#E5E7EB] p-8 flex flex-col items-center gap-3">
+      <div className="h-8 w-8 rounded-full border-4 border-[#E5E7EB] border-t-[#14B8A6] animate-spin" />
+      <p className="text-sm text-[#6B7280]">Loading reviews...</p>
+    </div>
+  );
+}
 
   return (
     <div className="space-y-6">
@@ -159,7 +160,6 @@ export default function ReviewSection({ bookId }: { bookId: string }) {
               className="bg-white rounded-lg border border-[#E5E7EB] p-5 md:p-6"
             >
               <div className="flex items-start gap-4">
-                {/* Avatar */}
                 <div className="h-10 w-10 rounded-full bg-[#14B8A6]/15 text-[#0D9488] flex items-center justify-center font-semibold text-sm shrink-0">
                   {initials(r.user.name, r.user.email)}
                 </div>
@@ -201,7 +201,6 @@ export default function ReviewSection({ bookId }: { bookId: string }) {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Star picker */}
             <div>
               <label className="block text-sm font-medium text-[#1A1D1E] mb-2">
                 Your Rating
@@ -220,11 +219,10 @@ export default function ReviewSection({ bookId }: { bookId: string }) {
                     aria-label={`Rate ${i} star${i > 1 ? 's' : ''}`}
                   >
                     <Star
-                      className={`h-7 w-7 transition-colors ${
-                        i <= (hoverRating || rating)
+                      className={`h-7 w-7 transition-colors ${i <= (hoverRating || rating)
                           ? 'fill-[#F59E0B] text-[#F59E0B]'
                           : 'text-[#D1D5DB]'
-                      }`}
+                        }`}
                     />
                   </button>
                 ))}
@@ -234,7 +232,6 @@ export default function ReviewSection({ bookId }: { bookId: string }) {
               </div>
             </div>
 
-            {/* Textarea */}
             <div>
               <label className="block text-sm font-medium text-[#1A1D1E] mb-2">
                 Your Review
@@ -258,7 +255,7 @@ export default function ReviewSection({ bookId }: { bookId: string }) {
           </form>
         </div>
       ) : (
-        <div className="bg-white rounded-lg  border border-[#E5E7EB] p-6 text-center">
+        <div className="bg-white rounded-lg border border-[#E5E7EB] p-6 text-center">
           <p className="text-sm text-[#6B7280]">
             <a
               href="/login"

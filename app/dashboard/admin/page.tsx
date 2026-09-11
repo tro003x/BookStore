@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { Users, BookOpen, DollarSign, Clock } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
+import DownloadReportButton from '@/components/dashboard/DownloadReportButton';
 
 interface Stats {
   totalBooks: number;
@@ -71,17 +72,54 @@ export default function AdminDashboardPage() {
     fetchStats();
   }, [status, session, router]);
 
-  if (loading) return <div className="p-8">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#E5E7EB] border-t-[#14B8A6] animate-spin" />
+          <p className="text-sm text-[#6B7280]">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const pendingTotal = (stats?.pendingBooks || 0) + (stats?.pendingPublishers || 0) + (stats?.pendingVerification || 0);
+  const pendingTotal =
+    (stats?.pendingBooks || 0) +
+    (stats?.pendingPublishers || 0) +
+    (stats?.pendingVerification || 0);
 
-  // Ensure charts always have data (even empty)
-  const weeklyData = stats?.weeklyChart && stats.weeklyChart.length > 0 ? stats.weeklyChart : [{ day: 'No data', amount: 0 }];
-  const monthlyData = stats?.chartData && stats.chartData.length > 0 ? stats.chartData : [{ month: 'No data', amount: 0 }];
-  const yearlyData = stats?.yearlyChart && stats.yearlyChart.length > 0 ? stats.yearlyChart : [{ month: 'No data', amount: 0 }];
+  const weeklyData =
+    stats?.weeklyChart && stats.weeklyChart.length > 0
+      ? stats.weeklyChart
+      : [{ day: 'No data', amount: 0 }];
+  const monthlyData =
+    stats?.chartData && stats.chartData.length > 0
+      ? stats.chartData
+      : [{ month: 'No data', amount: 0 }];
+  const yearlyData =
+    stats?.yearlyChart && stats.yearlyChart.length > 0
+      ? stats.yearlyChart
+      : [{ month: 'No data', amount: 0 }];
 
   return (
     <div>
+      {/* Header + download */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-['Fraunces'] text-2xl font-semibold text-[#0C0A00]">
+            Admin Dashboard
+          </h1>
+          <p className="text-sm text-[#6B7280] mt-1">
+            Overview of your store performance
+          </p>
+        </div>
+        <DownloadReportButton
+          endpoint="/api/admin/reports/download"
+          label="Download Revenue Report"
+        />
+      </div>
+
+      {/* Stat cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <StatCard
           title="Total Books"
@@ -120,7 +158,7 @@ export default function AdminDashboardPage() {
                   <XAxis dataKey="day" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
-                  <Bar dataKey="amount" fill="#2DD4BF" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="amount" fill="#14B8A6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -140,7 +178,7 @@ export default function AdminDashboardPage() {
                   <XAxis dataKey="month" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
-                  <Bar dataKey="amount" fill="#2DD4BF" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="amount" fill="#14B8A6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -148,7 +186,7 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Yearly chart full width */}
+      {/* Yearly chart */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium">Yearly Revenue</CardTitle>
@@ -162,7 +200,7 @@ export default function AdminDashboardPage() {
                 <XAxis dataKey="month" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip />
-                <Bar dataKey="amount" fill="#2DD4BF" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="amount" fill="#14B8A6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

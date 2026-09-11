@@ -60,12 +60,15 @@ export default function ReaderDashboardPage() {
     : items;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 rounded-full border-4 border-[#E5E7EB] border-t-[#14B8A6] animate-spin" />
         <p className="text-sm text-[#6B7280]">Loading library...</p>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8">

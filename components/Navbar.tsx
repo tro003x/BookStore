@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +20,6 @@ export default function Navbar() {
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-
   const [visible, setVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -42,11 +42,15 @@ export default function Navbar() {
     return null;
   }
 
+  const handleSignOut = async () => {
+    toast.success('Signed out successfully');
+    await signOut({ callbackUrl: '/' });
+  };
+
   return (
     <div
-      className={`fixed top-4 left-0 right-0 z-50 px-4 transition-transform duration-300 ${
-        visible ? 'translate-y-0' : '-translate-y-32'
-      }`}
+      className={`fixed top-4 left-0 right-0 z-50 px-4 transition-transform duration-300 ${visible ? 'translate-y-0' : '-translate-y-32'
+        }`}
     >
       <nav className="mx-auto max-w-7xl bg-white rounded-2xl shadow-lg border border-[#E5E7EB] px-6 py-3 flex items-center justify-between">
         {/* Logo */}
@@ -58,21 +62,37 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-1">
           <Link
             href="/catalog"
-            className={`px-4 py-2 rounded-xl text-sm transition-colors ${
-              pathname === '/catalog'
-                ? 'bg-[#F5F6F7] text-[#1A1D1E] font-medium'
-                : 'text-[#1A1D1E]/80 hover:bg-[#F5F6F7]'
-            }`}
+            className={`px-4 py-2 rounded-xl text-sm transition-colors ${pathname === '/catalog'
+                ? 'bg-[#F5F2EC] text-[#1A1D1E] font-medium'
+                : 'text-[#1A1D1E]/80 hover:bg-[#F5F2EC]'
+              }`}
           >
             Catalog
           </Link>
           <Link
+            href="/new-arrivals"
+            className={`px-4 py-2 rounded-xl text-sm transition-colors ${pathname === '/new-arrivals'
+                ? 'bg-[#F5F2EC] text-[#1A1D1E] font-medium'
+                : 'text-[#1A1D1E]/80 hover:bg-[#F5F2EC]'
+              }`}
+          >
+            New
+          </Link>
+          <Link
+            href="/bestsellers"
+            className={`px-4 py-2 rounded-xl text-sm transition-colors ${pathname === '/bestsellers'
+                ? 'bg-[#F5F2EC] text-[#1A1D1E] font-medium'
+                : 'text-[#1A1D1E]/80 hover:bg-[#F5F2EC]'
+              }`}
+          >
+            Bestsellers
+          </Link>
+          <Link
             href="/directory"
-            className={`px-4 py-2 rounded-xl text-sm transition-colors ${
-              pathname === '/directory'
-                ? 'bg-[#F5F6F7] text-[#1A1D1E] font-medium'
-                : 'text-[#1A1D1E]/80 hover:bg-[#F5F6F7]'
-            }`}
+            className={`px-4 py-2 rounded-xl text-sm transition-colors ${pathname === '/directory'
+                ? 'bg-[#F5F2EC] text-[#1A1D1E] font-medium'
+                : 'text-[#1A1D1E]/80 hover:bg-[#F5F2EC]'
+              }`}
           >
             Directory
           </Link>
@@ -84,13 +104,13 @@ export default function Navbar() {
             <>
               <Link
                 href="/cart"
-                className="relative p-2 rounded-xl hover:bg-[#F5F6F7] transition-colors"
+                className="relative p-2 rounded-xl hover:bg-[#F5F2EC] transition-colors"
               >
                 <ShoppingCart className="h-5 w-5 text-[#1A1D1E]" />
               </Link>
 
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl hover:bg-[#F5F6F7] transition-colors cursor-pointer">
+                <DropdownMenuTrigger className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl hover:bg-[#F5F2EC] transition-colors cursor-pointer">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-[#4B5D45] text-white text-sm">
                       {session.user?.name?.[0] || 'U'}
@@ -139,7 +159,7 @@ export default function Navbar() {
 
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => signOut()}
+                    onClick={handleSignOut}
                     className="flex items-center gap-2 w-full cursor-pointer text-red-600"
                   >
                     <LogOut className="h-4 w-4" /> Sign out

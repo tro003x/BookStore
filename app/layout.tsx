@@ -4,6 +4,8 @@ import Providers from "./providers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
 import MainWrapper from "@/components/MainWrapper";
+import WelcomeToast from "@/components/WelcomeToast";
+import { Toaster } from "@/components/ui/sonner";
 import '@fontsource/fraunces';
 import '@fontsource/inter';
 import '@fontsource/ibm-plex-mono';
@@ -25,6 +27,8 @@ export default function RootLayout({
           <Navbar />
           <MainWrapper>{children}</MainWrapper>
           <Footer />
+          <WelcomeToast />
+          <Toaster position="top-right" richColors closeButton />
         </Providers>
       </body>
     </html>

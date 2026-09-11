@@ -1,4 +1,3 @@
-// app/api/payment/confirm/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
@@ -8,34 +7,23 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 export async function POST(req: Request) {
   try {
     const { sessionId } = await req.json();
-    console.log('CONFIRM: sessionId =', sessionId);
-
     if (!sessionId) {
       return NextResponse.json({ error: 'Missing sessionId' }, { status: 400 });
     }
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
-    console.log('CONFIRM: status =', session.payment_status, 'metadata =', session.metadata);
-
     if (session.payment_status !== 'paid') {
       return NextResponse.json({ error: 'Payment not completed' }, { status: 400 });
     }
 
     const userId = session.metadata?.userId;
     const cartId = session.metadata?.cartId;
+    const selectedIdsRaw = session.metadata?.selectedItemIds || '';
+    const selectedIds = selectedIdsRaw ? selectedIdsRaw.split(',') : [];
 
     if (!userId || !cartId) {
-      console.log('CONFIRM ERROR: missing metadata');
       return NextResponse.json({ error: 'Missing metadata' }, { status: 400 });
     }
-
-    // Idempotency — check if we already processed this cart
-    const existing = await prisma.purchase.findFirst({
-      where: { userId, items: { some: {} } },
-      orderBy: { purchasedAt: 'desc' },
-      take: 1,
-    });
-    // (only needed if you have duplicates; skip check for now)
 
     const cart = await prisma.cart.findUnique({
       where: { id: cartId },
@@ -43,17 +31,20 @@ export async function POST(req: Request) {
     });
 
     if (!cart) {
-      console.log('CONFIRM: cart not found');
       return NextResponse.json({ error: 'Cart not found' }, { status: 404 });
     }
 
-    if (cart.items.length === 0) {
-      console.log('CONFIRM: cart already empty — likely duplicate call');
+    // Filter cart items by selected IDs
+    const itemsToProcess = selectedIds.length > 0
+      ? cart.items.filter((i) => selectedIds.includes(i.id))
+      : cart.items;
+
+    if (itemsToProcess.length === 0) {
       return NextResponse.json({ success: true, message: 'Already processed' });
     }
 
     let total = 0;
-    const purchaseItems = cart.items.map((item) => {
+    const purchaseItems = itemsToProcess.map((item) => {
       const price = Number(item.book.price);
       total += price * item.quantity;
       return {
@@ -71,10 +62,10 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log('CONFIRM: purchase created =', purchase.id);
-
-    // Clear cart
-    await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+    // Remove only purchased items from cart
+    await prisma.cartItem.deleteMany({
+      where: { id: { in: itemsToProcess.map((i) => i.id) } },
+    });
 
     return NextResponse.json({ success: true, purchase });
   } catch (error: any) {

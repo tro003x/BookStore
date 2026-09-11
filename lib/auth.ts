@@ -40,7 +40,15 @@ export const authOptions: NextAuthOptions = {
 
         if (!user || !user.passwordHash) return null;
 
-        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
+        // Block unverified users
+        if (!user.emailVerified) {
+          throw new Error('EMAIL_NOT_VERIFIED');
+        }
+
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.passwordHash
+        );
         if (!isValid) return null;
 
         return {
@@ -58,7 +66,6 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.id = user.id;
       } else if (token.email) {
-        // Fallback: fetch role from DB if token missing role (e.g., after refresh)
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email as string },
           select: { role: true, id: true },
@@ -77,12 +84,23 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    // For Google OAuth: mark as verified automatically
+    async signIn({ user, account }) {
+      if (account?.provider === 'google' && user.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+        if (dbUser && !dbUser.emailVerified) {
+          await prisma.user.update({
+            where: { id: dbUser.id },
+            data: { emailVerified: new Date() },
+          });
+        }
+      }
+      return true;
+    },
   },
-  session: {
-    strategy: 'jwt',
-  },
-  pages: {
-    signIn: '/login',
-  },
+  session: { strategy: 'jwt' },
+  pages: { signIn: '/login' },
   secret: process.env.NEXTAUTH_SECRET,
 };

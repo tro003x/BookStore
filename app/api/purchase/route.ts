@@ -1,4 +1,3 @@
-// app/api/purchase/route.ts
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/getUser';
 import { prisma } from '@/lib/prisma';
@@ -13,6 +12,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const body = await req.json().catch(() => ({}));
+    const selectedItemIds: string[] = Array.isArray(body.itemIds) ? body.itemIds : [];
+
     const cart = await prisma.cart.findUnique({
       where: { userId: user.id },
       include: { items: { include: { book: true } } },
@@ -22,7 +24,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Cart empty' }, { status: 400 });
     }
 
-    const lineItems = cart.items.map((item) => ({
+    // Filter items by selected IDs (if provided)
+    const itemsToCheckout = selectedItemIds.length > 0
+      ? cart.items.filter((i) => selectedItemIds.includes(i.id))
+      : cart.items;
+
+    if (itemsToCheckout.length === 0) {
+      return NextResponse.json({ error: 'No items selected' }, { status: 400 });
+    }
+
+    const lineItems = itemsToCheckout.map((item) => ({
       price_data: {
         currency: 'usd',
         product_data: {
@@ -43,10 +54,9 @@ export async function POST(req: Request) {
       metadata: {
         userId: user.id,
         cartId: cart.id,
+        selectedItemIds: itemsToCheckout.map((i) => i.id).join(','),
       },
     });
-
-    console.log('PURCHASE: created session', session.id, 'userId', user.id, 'cartId', cart.id);
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {

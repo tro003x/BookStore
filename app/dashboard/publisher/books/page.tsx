@@ -25,11 +25,12 @@ import StatusBadge from '@/components/dashboard/StatusBadge';
 import BookForm from '@/components/BookForm';
 import { Pencil, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 interface Book {
   id: string;
   title: string;
-  author: string;       // mapped from authorName
+  author: string;
   price: number;
   status: string;
   paymentStatus: string;
@@ -54,6 +55,7 @@ export default function PublisherBooksPage() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
+    if (status === 'loading') return;
     if (status === 'unauthenticated') {
       router.push('/login');
       return;
@@ -75,18 +77,16 @@ export default function PublisherBooksPage() {
       if (!categoriesRes.ok) throw new Error('Failed to fetch categories');
       const booksData = await booksRes.json();
       const categoriesData = await categoriesRes.json();
-
-      // Map authorName → author and ensure categoryId
       const mappedBooks = booksData.map((book: any) => ({
         ...book,
         author: book.authorName,
         categoryId: book.categoryId,
       }));
-
       setBooks(mappedBooks);
       setCategories(categoriesData);
     } catch (error) {
       console.error('Fetch error:', error);
+      toast.error('Failed to load books');
     } finally {
       setLoading(false);
     }
@@ -114,9 +114,10 @@ export default function PublisherBooksPage() {
         throw new Error(err.error || 'Update failed');
       }
       setDialogOpen(false);
-      fetchData();
+      await fetchData();
+      toast.success('Book updated');
     } catch (err: any) {
-      alert(err.message || 'Update failed');
+      toast.error(err.message || 'Update failed');
     }
   };
 
@@ -128,9 +129,10 @@ export default function PublisherBooksPage() {
       });
       if (!res.ok) throw new Error('Delete failed');
       setDeleteDialogOpen(false);
-      fetchData();
+      await fetchData();
+      toast.success('Book deleted');
     } catch (err: any) {
-      alert(err.message || 'Delete failed');
+      toast.error(err.message || 'Delete failed');
     }
   };
 

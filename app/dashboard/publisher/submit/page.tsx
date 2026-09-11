@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import BookForm from '@/components/BookForm';
+import { toast } from 'sonner';
 
 export default function PublisherSubmitPage() {
   const { data: session, status } = useSession();
@@ -36,11 +37,11 @@ export default function PublisherSubmitPage() {
     });
 
     if (res.ok) {
-      alert('Book created! Pay $10 to submit for approval.');
+      toast.success('Book created! Pay $10 to submit for approval.');
       router.push('/dashboard/publisher/books');
     } else {
       const err = await res.json();
-      alert('Error: ' + (err.error || 'Something went wrong'));
+      toast.error(err.error || 'Something went wrong');
     }
   };
 
@@ -49,7 +50,9 @@ export default function PublisherSubmitPage() {
       <h1 className="text-2xl font-semibold mb-4">Submit New Book</h1>
       <Card className="border-[#E5E7EB] text-left">
         <CardHeader>
-          <CardTitle className="font-['Fraunces'] text-xl text-center">Book Details</CardTitle>
+          <CardTitle className="font-['Fraunces'] text-xl text-center">
+            Book Details
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <BookForm

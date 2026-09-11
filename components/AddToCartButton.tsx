@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function AddToCartButton({ bookId }: { bookId: string }) {
   const { data: session, status } = useSession();
@@ -24,12 +25,12 @@ export default function AddToCartButton({ bookId }: { bookId: string }) {
         body: JSON.stringify({ bookId, quantity: 1 }),
       });
       if (res.ok) {
-        alert('Added to cart');
+        toast.success('Added to cart');
       } else {
-        alert('Failed to add');
+        toast.error('Failed to add to cart');
       }
     } catch (error) {
-      alert('Error');
+      toast.error('Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -42,17 +43,21 @@ export default function AddToCartButton({ bookId }: { bookId: string }) {
       return;
     }
 
-    const res = await fetch('/api/payment/create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookId }),
-    });
+    try {
+      const res = await fetch('/api/payment/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId }),
+      });
 
-    const { url } = await res.json();
-    if (url) {
-      window.location.href = url;
-    } else {
-      alert('Payment failed. Please try again.');
+      const { url, error } = await res.json();
+      if (url) {
+        window.location.href = url;
+      } else {
+        toast.error(error || 'Payment failed. Please try again.');
+      }
+    } catch {
+      toast.error('Payment error. Please try again.');
     }
   };
 

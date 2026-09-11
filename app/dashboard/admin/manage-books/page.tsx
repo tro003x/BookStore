@@ -24,6 +24,7 @@ import {
 import StatusBadge from '@/components/dashboard/StatusBadge';
 import BookForm from '@/components/BookForm';
 import { Pencil, Trash2, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Book {
   categoryId: string;
@@ -80,7 +81,7 @@ export default function ManageBooksPage() {
       setCategories(categoriesData);
     } catch (error) {
       console.error('Fetch error:', error);
-      alert('Failed to load data');
+      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -115,7 +116,7 @@ export default function ManageBooksPage() {
       setDialogOpen(false);
       fetchData();
     } catch (err: any) {
-      alert(err.message || 'Something went wrong');
+      toast.error(err.message || 'Something went wrong');
     }
   };
 
@@ -127,7 +128,7 @@ export default function ManageBooksPage() {
       setDeleteDialogOpen(false);
       fetchData();
     } catch (err: any) {
-      alert(err.message || 'Delete failed');
+      toast.error(err.message || 'Delete failed');
     }
   };
 

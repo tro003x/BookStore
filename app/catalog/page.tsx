@@ -293,10 +293,13 @@ export default function CatalogPage() {
 
         {/* Grid */}
         {loading ? (
-          <p className="text-sm text-[#6B7280] text-center py-10">
-            Loading...
-          </p>
-        ) : filtered.length === 0 ? (
+  <div className="flex items-center justify-center py-16">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-10 w-10 rounded-full border-4 border-[#E5E7EB] border-t-[#14B8A6] animate-spin" />
+      <p className="text-sm text-[#6B7280]">Loading catalog...</p>
+    </div>
+  </div>
+) : filtered.length === 0 ? (
           <div className="bg-white rounded-lg border border-[#E5E7EB] py-16 text-center">
             <p className="text-sm text-[#6B7280] mb-4">
               No books match your filters.

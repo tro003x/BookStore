@@ -4,29 +4,34 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  // 1. Admin user
+  const now = new Date();
+
+  // 1. Admin
   const adminPassword = await bcrypt.hash('admin123', 10);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
-    update: {},
+    update: { emailVerified: now, role: Role.ADMIN },
     create: {
       email: 'admin@example.com',
       passwordHash: adminPassword,
       name: 'Admin',
       role: Role.ADMIN,
+      emailVerified: now,
     },
   });
+  console.log('Admin ready:', admin.email);
 
-  // 2. Publisher user + publisher profile (approved)
+  // 2. Publisher
   const pubPassword = await bcrypt.hash('publisher123', 10);
   const pubUser = await prisma.user.upsert({
     where: { email: 'publisher@example.com' },
-    update: {},
+    update: { emailVerified: now },
     create: {
       email: 'publisher@example.com',
       passwordHash: pubPassword,
       name: 'Test Publisher',
       role: Role.PUBLISHER,
+      emailVerified: now,
     },
   });
   const publisher = await prisma.publisher.upsert({
@@ -35,24 +40,123 @@ async function main() {
     create: {
       userId: pubUser.id,
       name: 'Test Publisher Inc.',
+      email: 'publisher@example.com',
       approved: true,
+      verificationStatus: 'APPROVED',
     },
   });
 
-  // 3. Categories
-  const fiction = await prisma.category.upsert({
-    where: { name: 'Fiction' },
-    update: {},
-    create: { name: 'Fiction' },
+  // 3. Author
+  const authorPassword = await bcrypt.hash('author123', 10);
+  const authorUser = await prisma.user.upsert({
+    where: { email: 'author@example.com' },
+    update: { emailVerified: now },
+    create: {
+      email: 'author@example.com',
+      passwordHash: authorPassword,
+      name: 'Test Author',
+      role: Role.AUTHOR,
+      emailVerified: now,
+    },
   });
-  const science = await prisma.category.upsert({
-    where: { name: 'Science' },
+  const author = await prisma.author.upsert({
+    where: { userId: authorUser.id },
     update: {},
-    create: { name: 'Science' },
+    create: {
+      userId: authorUser.id,
+      name: 'Test Author',
+      email: 'author@example.com',
+      verificationStatus: 'APPROVED',
+    },
   });
 
-  // 4. Books (4 books)
+  // 4. Reader
+  const readerPassword = await bcrypt.hash('reader123', 10);
+  const reader = await prisma.user.upsert({
+    where: { email: 'reader@example.com' },
+    update: { emailVerified: now },
+    create: {
+      email: 'reader@example.com',
+      passwordHash: readerPassword,
+      name: 'Reader',
+      role: Role.READER,
+      emailVerified: now,
+    },
+  });
+  console.log('Reader ready:', reader.email);
+
+  // 5. Categories
+    // 5. Categories
+  const categories = await Promise.all([
+    prisma.category.upsert({
+      where: { name: 'Fiction' },
+      update: {},
+      create: { name: 'Fiction' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'Science' },
+      update: {},
+      create: { name: 'Science' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'Poetry' },
+      update: {},
+      create: { name: 'Poetry' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'Novel' },
+      update: {},
+      create: { name: 'Novel' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'Biography' },
+      update: {},
+      create: { name: 'Biography' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'Self-Help' },
+      update: {},
+      create: { name: 'Self-Help' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'History' },
+      update: {},
+      create: { name: 'History' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'Fantasy' },
+      update: {},
+      create: { name: 'Fantasy' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'Mystery' },
+      update: {},
+      create: { name: 'Mystery' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'Romance' },
+      update: {},
+      create: { name: 'Romance' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'Technology' },
+      update: {},
+      create: { name: 'Technology' },
+    }),
+    prisma.category.upsert({
+      where: { name: 'Philosophy' },
+      update: {},
+      create: { name: 'Philosophy' },
+    }),
+  ]);
+
+  // Find specific ones for book seeding below
+  const fiction = categories.find((c) => c.name === 'Fiction')!;
+  const science = categories.find((c) => c.name === 'Science')!;
+
+  // 6. Books
   await prisma.book.createMany({
+    skipDuplicates: true,
     data: [
       {
         title: 'The Great Novel',
@@ -62,7 +166,7 @@ async function main() {
         status: BookStatus.APPROVED,
         publisherId: publisher.id,
         categoryId: fiction.id,
-        publishedAt: new Date(),
+        publishedAt: now,
       },
       {
         title: 'Quantum Physics for Beginners',
@@ -72,7 +176,7 @@ async function main() {
         status: BookStatus.APPROVED,
         publisherId: publisher.id,
         categoryId: science.id,
-        publishedAt: new Date(),
+        publishedAt: now,
       },
       {
         title: 'The Art of Coding',
@@ -82,7 +186,7 @@ async function main() {
         status: BookStatus.APPROVED,
         publisherId: publisher.id,
         categoryId: science.id,
-        publishedAt: new Date(),
+        publishedAt: now,
       },
       {
         title: 'Biography of a Genius',
@@ -92,51 +196,19 @@ async function main() {
         status: BookStatus.APPROVED,
         publisherId: publisher.id,
         categoryId: fiction.id,
-        publishedAt: new Date(),
+        publishedAt: now,
       },
     ],
-  });
-
-  // Author user
-const authorPassword = await bcrypt.hash('author123', 10);
-const authorUser = await prisma.user.upsert({
-  where: { email: 'author@example.com' },
-  update: {},
-  create: {
-    email: 'author@example.com',
-    passwordHash: authorPassword,
-    name: 'Test Author',
-    role: 'AUTHOR',
-  },
-});
-
-const author = await prisma.author.upsert({
-  where: { userId: authorUser.id },
-  update: {},
-  create: {
-    userId: authorUser.id,
-    name: 'Test Author',
-    email: 'author@example.com',
-    verificationStatus: 'APPROVED',
-  },
-});
-
-  // 5. Reader user
-  const readerPassword = await bcrypt.hash('reader123', 10);
-  await prisma.user.upsert({
-    where: { email: 'reader@example.com' },
-    update: {},
-    create: {
-      email: 'reader@example.com',
-      passwordHash: readerPassword,
-      name: 'Reader',
-      role: Role.READER,
-    },
   });
 
   console.log('Seed completed.');
 }
 
 main()
-  .catch(e => console.error(e))
-  .finally(() => prisma.$disconnect());
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

@@ -3,16 +3,27 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import { BookOpen, DollarSign, ShoppingBag } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
+import DownloadReportButton from '@/components/dashboard/DownloadReportButton';
 
 interface Stats {
   totalBooks: number;
   totalCopiesSold: number;
   totalRevenue: number;
   chartData: { month: string; revenue: number }[];
+  weeklyChart: { day: string; revenue: number }[];
+  yearlyChart: { month: string; revenue: number }[];
 }
 
 export default function PublisherDashboardPage() {
@@ -20,7 +31,6 @@ export default function PublisherDashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -40,13 +50,14 @@ export default function PublisherDashboardPage() {
         const data = await res.json();
         setStats(data);
       } catch (err) {
-        console.error('Stats fetch error:', err);
-        setError('Failed to load stats');
+        console.error('Stats error:', err);
         setStats({
           totalBooks: 0,
           totalCopiesSold: 0,
           totalRevenue: 0,
           chartData: [],
+          weeklyChart: [],
+          yearlyChart: [],
         });
       } finally {
         setLoading(false);
@@ -55,11 +66,49 @@ export default function PublisherDashboardPage() {
     fetchStats();
   }, [status, session, router]);
 
-  if (loading) return <div className="p-8">Loading...</div>;
-  if (error) return <div className="p-8 text-red-600">Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#E5E7EB] border-t-[#14B8A6] animate-spin" />
+          <p className="text-sm text-[#6B7280]">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const weeklyData =
+    stats?.weeklyChart && stats.weeklyChart.length > 0
+      ? stats.weeklyChart
+      : [{ day: 'No data', revenue: 0 }];
+  const monthlyData =
+    stats?.chartData && stats.chartData.length > 0
+      ? stats.chartData
+      : [{ month: 'No data', revenue: 0 }];
+  const yearlyData =
+    stats?.yearlyChart && stats.yearlyChart.length > 0
+      ? stats.yearlyChart
+      : [{ month: 'No data', revenue: 0 }];
 
   return (
     <div>
+      {/* Header + download */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-['Fraunces'] text-2xl font-semibold text-[#0C0A00]">
+            Publisher Dashboard
+          </h1>
+          <p className="text-sm text-[#6B7280] mt-1">
+            Track your sales and revenue
+          </p>
+        </div>
+        <DownloadReportButton
+          endpoint="/api/publisher/reports/download"
+          label="Download Sales Report"
+        />
+      </div>
+
+      {/* Stat cards */}
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <StatCard
           title="Total Books"
@@ -78,32 +127,69 @@ export default function PublisherDashboardPage() {
         />
       </div>
 
-      {stats?.chartData && stats.chartData.length > 0 ? (
-        <Card className="border-[#E5E7EB]">
+      {/* Weekly + Monthly */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <Card>
           <CardHeader>
-            <CardTitle className="font-['Fraunces'] text-lg">Monthly Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">Weekly Revenue</CardTitle>
+            <CardDescription className="text-xs">Last 7 days</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-32">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.chartData}>
+                <BarChart data={weeklyData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
+                  <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
-                  <Bar dataKey="revenue" fill="#2DD4BF" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" fill="#14B8A6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
-      ) : (
-        <Card className="border-[#E5E7EB]">
-          <CardContent className="p-5 text-center text-[#6B7280]">
-            No revenue data available yet.
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">6-Month Revenue</CardTitle>
+            <CardDescription className="text-xs">Last 6 months</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-32">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Bar dataKey="revenue" fill="#14B8A6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
-      )}
+      </div>
+
+      {/* Yearly */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Yearly Revenue</CardTitle>
+          <CardDescription className="text-xs">Last 12 months</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={yearlyData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10 }} />
+                <Tooltip />
+                <Bar dataKey="revenue" fill="#14B8A6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
