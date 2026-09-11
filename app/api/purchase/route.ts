@@ -1,3 +1,4 @@
+// app/api/purchase/route.ts
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/getUser';
 import { prisma } from '@/lib/prisma';
@@ -45,9 +46,11 @@ export async function POST(req: Request) {
       },
     });
 
+    console.log('PURCHASE: created session', session.id, 'userId', user.id, 'cartId', cart.id);
+
     return NextResponse.json({ url: session.url });
-  } catch (error) {
-    console.error('Stripe error:', error);
-    return NextResponse.json({ error: 'Payment failed' }, { status: 500 });
+  } catch (error: any) {
+    console.error('PURCHASE EXCEPTION:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

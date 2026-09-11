@@ -8,7 +8,15 @@ export async function GET(req: Request) {
 
   const purchases = await prisma.purchase.findMany({
     where: { userId: user.id },
-    include: { items: { include: { book: true } } },
+    include: {
+      items: {
+        include: {
+          book: {
+            include: { category: true },
+          },
+        },
+      },
+    },
     orderBy: { purchasedAt: 'desc' },
   });
 

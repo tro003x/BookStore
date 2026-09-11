@@ -133,7 +133,7 @@ export default function Footer() {
               <div className="flex gap-2.5">
                 {/* GitHub */}
                 <a
-                  href="https://github.com/"
+                  href="https://github.com/tro003x"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="GitHub"
@@ -146,7 +146,7 @@ export default function Footer() {
 
                 {/* LinkedIn */}
                 <a
-                  href="https://linkedin.com/"
+                  href="https://linkedin.com/in/tro003x"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn"
@@ -159,7 +159,7 @@ export default function Footer() {
 
                 {/* X */}
                 <a
-                  href="https://x.com/"
+                  href="https://x.com/tro003x"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="X"
@@ -172,7 +172,7 @@ export default function Footer() {
 
                 {/* Email */}
                 <a
-                  href="mailto:contact@boistore.com"
+                  href="mailto:oritrobinislam@gmail.com"
                   aria-label="Email"
                   className="p-2 rounded-lg bg-white/5 hover:bg-[#14B8A6]/15 hover:text-[#14B8A6] transition-all"
                 >
