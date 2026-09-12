@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 
 export default function ReadBookPage() {
   const params = useParams();
@@ -13,7 +13,7 @@ export default function ReadBookPage() {
   const bookId = params.bookId as string;
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [bookTitle, setBookTitle] = useState<string>('');
+  const [bookTitle, setBookTitle] = useState<string>('Book');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +24,7 @@ export default function ReadBookPage() {
       return;
     }
 
-    const fetchPdf = async () => {
+    const load = async () => {
       try {
         const res = await fetch(`/api/books/${bookId}/pdf?preview=false`);
         const data = await res.json();
@@ -35,35 +35,45 @@ export default function ReadBookPage() {
           return;
         }
 
-        // Get book metadata for title
-        const bookRes = await fetch(`/api/books/${bookId}`);
-        const bookData = await bookRes.json();
-        setBookTitle(bookData.title || 'Book');
-
         setPdfUrl(data.url);
-        setLoading(false);
+        if (data.title) setBookTitle(data.title);
       } catch (err) {
+        console.error('PDF fetch error:', err);
         setError('Failed to load book');
+      } finally {
         setLoading(false);
       }
     };
-    fetchPdf();
+
+    load();
   }, [bookId, status, router]);
 
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F5F2EC]">
-        <p className="text-[#6B7280]">Loading book...</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#E5E7EB] border-t-[#14B8A6] animate-spin" />
+          <p className="text-sm text-[#6B7280]">Loading book...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F2EC]">
-        <div className="bg-white rounded-lg border border-[#E5E7EB] p-8 max-w-md text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={() => router.push('/dashboard/reader')} variant="outline">
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F2EC] px-4">
+        <div className="bg-white rounded-lg border border-[#E5E7EB] p-8 max-w-md w-full text-center">
+          <div className="inline-flex items-center justify-center h-14 w-14 rounded-full bg-[#DC2626]/10 mb-4">
+            <AlertCircle className="h-6 w-6 text-[#DC2626]" />
+          </div>
+          <h1 className="font-['Fraunces'] text-xl font-semibold mb-2">
+            Failed to load book
+          </h1>
+          <p className="text-sm text-[#6B7280] mb-6">{error}</p>
+          <Button
+            onClick={() => router.push('/dashboard/reader')}
+            className="w-full bg-[#4B5D45] hover:bg-[#3E4C39] text-white"
+          >
             Back to Library
           </Button>
         </div>
@@ -72,9 +82,9 @@ export default function ReadBookPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1A1D1E] flex flex-col">
+    <div className="h-screen bg-[#1A1D1E] flex flex-col">
       {/* Top bar */}
-      <header className="bg-[#1A1D1E] border-b border-white/10 px-4 py-3 flex items-center justify-between">
+      <header className="bg-[#1A1D1E] border-b border-white/10 px-4 py-3 flex items-center justify-between flex-shrink-0">
         <Button
           onClick={() => router.push('/dashboard/reader')}
           variant="ghost"
@@ -85,17 +95,21 @@ export default function ReadBookPage() {
         <h1 className="font-['Fraunces'] text-white text-lg truncate max-w-md">
           {bookTitle}
         </h1>
-        <div className="w-32" /> {/* Spacer */}
+        <div className="w-32" />
       </header>
 
-      {/* PDF Iframe */}
+      {/* PDF viewer */}
       <div className="flex-1 bg-[#2A2824]">
-        {pdfUrl && (
+        {pdfUrl ? (
           <iframe
             src={pdfUrl}
             className="w-full h-full"
             title={bookTitle}
           />
+        ) : (
+          <div className="h-full flex items-center justify-center text-white/60 text-sm">
+            No PDF available.
+          </div>
         )}
       </div>
     </div>

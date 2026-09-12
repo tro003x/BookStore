@@ -38,9 +38,9 @@ export default function Navbar() {
   }, [lastScrollY]);
 
   // Hide navbar on dashboard pages
-  if (pathname?.startsWith('/dashboard')) {
-    return null;
-  }
+  if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/read')) {
+  return null;
+}
 
   const handleSignOut = async () => {
     toast.success('Signed out successfully');

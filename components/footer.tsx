@@ -18,9 +18,9 @@ export default function Footer() {
   const [termsOpen, setTermsOpen] = useState(false);
   const [cookieOpen, setCookieOpen] = useState(false);
 
-  if (pathname?.startsWith('/dashboard')) {
-    return null;
-  }
+  if (pathname?.startsWith('/dashboard') || pathname?.startsWith('/read')) {
+  return null;
+}
 
   const currentYear = new Date().getFullYear();
 

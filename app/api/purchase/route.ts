@@ -24,10 +24,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Cart empty' }, { status: 400 });
     }
 
-    // Filter items by selected IDs (if provided)
-    const itemsToCheckout = selectedItemIds.length > 0
-      ? cart.items.filter((i) => selectedItemIds.includes(i.id))
-      : cart.items;
+    // Filter to selected items (or all if none selected)
+    const itemsToCheckout =
+      selectedItemIds.length > 0
+        ? cart.items.filter((i) => selectedItemIds.includes(i.id))
+        : cart.items;
 
     if (itemsToCheckout.length === 0) {
       return NextResponse.json({ error: 'No items selected' }, { status: 400 });
@@ -52,15 +53,24 @@ export async function POST(req: Request) {
       success_url: `${process.env.NEXTAUTH_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/cart`,
       metadata: {
-        userId: user.id,
-        cartId: cart.id,
-        selectedItemIds: itemsToCheckout.map((i) => i.id).join(','),
+        userId: user.id,                                            // ← REQUIRED
+        cartId: cart.id,                                            // ← REQUIRED
+        selectedItemIds: itemsToCheckout.map((i) => i.id).join(','), // ← for partial checkout
       },
+    });
+
+    console.log('PURCHASE: session created', session.id, {
+      userId: user.id,
+      cartId: cart.id,
+      itemCount: itemsToCheckout.length,
     });
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
     console.error('PURCHASE EXCEPTION:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || 'Failed to create checkout' },
+      { status: 500 }
+    );
   }
 }

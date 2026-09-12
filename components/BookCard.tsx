@@ -41,26 +41,29 @@ export default function BookCard({ book }: BookCardProps) {
       onClick={handleCardClick}
       className="overflow-hidden border border-[#E5E7EB] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 bg-white cursor-pointer flex flex-col"
     >
-      <div className="relative">
-        <AspectRatio ratio={16 / 9}>
-          {book.coverImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={book.coverImageUrl}
-              alt={book.title}
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <div className="w-full h-full bg-[#F5F2EC] flex items-center justify-center text-[#6B7280] text-sm">
-              No cover
-            </div>
-          )}
-        </AspectRatio>
-        <div
-          className="absolute left-0 top-0 w-1 h-full"
-          style={{ backgroundColor: color }}
-        />
-      </div>
+      <div className="relative aspect-[3/4] rounded-t-lg overflow-hidden bg-[#F5F2EC]">
+  {book.coverImageUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={book.coverImageUrl}
+      alt={book.title}
+      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+    />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center text-[#6B7280] text-sm">
+      No cover
+    </div>
+  )}
+
+  {/* Category spine bar */}
+  <div
+    className="absolute left-0 top-0 w-1 h-full"
+    style={{ backgroundColor: color }}
+  />
+
+  {/* Subtle bottom gradient for depth (matches library) */}
+  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
+</div>
 
       <CardHeader className="pb-2">
         <CardTitle className="font-['Fraunces'] text-lg line-clamp-1 hover:text-[#14B8A6] transition-colors">
