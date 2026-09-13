@@ -8,9 +8,12 @@ import { revalidatePath } from 'next/cache';
 
 export default async function ManagePublishersPage() {
   const publishers = await prisma.publisher.findMany({
-    include: { user: { select: { email: true } } },
-    orderBy: { createdAt: 'desc' },
-  });
+  where: {
+    user: { emailVerified: { not: null } },
+  },
+  include: { user: { select: { email: true } } },
+  orderBy: { createdAt: 'desc' },
+});
 
   async function deletePublisher(id: string) {
     'use server';

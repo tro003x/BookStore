@@ -53,9 +53,9 @@ export async function POST(req: Request) {
       success_url: `${process.env.NEXTAUTH_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/cart`,
       metadata: {
-        userId: user.id,                                            // ← REQUIRED
-        cartId: cart.id,                                            // ← REQUIRED
-        selectedItemIds: itemsToCheckout.map((i) => i.id).join(','), // ← for partial checkout
+        userId: user.id,                                           
+        cartId: cart.id,                                            
+        selectedItemIds: itemsToCheckout.map((i) => i.id).join(','), 
       },
     });
 

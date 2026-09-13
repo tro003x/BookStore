@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/footer";
 import MainWrapper from "@/components/MainWrapper";
 import WelcomeToast from "@/components/WelcomeToast";
+import AIChatbot from "@/components/AIChatbot";
 import { Toaster } from "@/components/ui/sonner";
 import '@fontsource/fraunces';
 import '@fontsource/inter';
@@ -28,6 +29,7 @@ export default function RootLayout({
           <MainWrapper>{children}</MainWrapper>
           <Footer />
           <WelcomeToast />
+          <AIChatbot />
           <Toaster position="top-right" richColors closeButton />
         </Providers>
       </body>

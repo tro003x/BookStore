@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Search,
@@ -13,6 +14,7 @@ import {
   Users,
   BookOpen,
   UserCircle2,
+  MessageSquare,
 } from 'lucide-react';
 
 interface Author {
@@ -88,7 +90,10 @@ export default function DirectoryPage() {
   const isUnlocked = (profileId: string, profileType: string) =>
     unlockedSet.has(`${profileType.toUpperCase()}:${profileId}`);
 
-  const isOwnProfile = (profileId: string, profileType: 'AUTHOR' | 'PUBLISHER') => {
+  const isOwnProfile = (
+    profileId: string,
+    profileType: 'AUTHOR' | 'PUBLISHER'
+  ) => {
     if (profileType === 'AUTHOR') return myAuthorId === profileId;
     if (profileType === 'PUBLISHER') return myPublisherId === profileId;
     return false;
@@ -105,9 +110,7 @@ export default function DirectoryPage() {
     if (!search.trim()) return authors;
     const q = search.toLowerCase();
     return authors.filter(
-      (a) =>
-        a.name.toLowerCase().includes(q) ||
-        a.bio?.toLowerCase().includes(q)
+      (a) => a.name.toLowerCase().includes(q) || a.bio?.toLowerCase().includes(q)
     );
   }, [authors, search, filter]);
 
@@ -178,13 +181,11 @@ export default function DirectoryPage() {
         )}
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-lg border border-[#E5E7EB] p-6 h-56 animate-pulse"
-              />
-            ))}
+          <div className="flex items-center justify-center py-24">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-10 w-10 rounded-full border-4 border-[#E5E7EB] border-t-[#14B8A6] animate-spin" />
+              <p className="text-sm text-[#6B7280]">Loading directory...</p>
+            </div>
           </div>
         ) : totalResults === 0 ? (
           <div className="bg-white rounded-lg border border-[#E5E7EB] py-16 text-center">
@@ -336,17 +337,16 @@ function ProfileCard({
         {subtitle}
       </p>
 
-      <div className="mt-auto">
-        {/* Own profile */}
+      <div className="mt-auto space-y-2">
         {isOwn ? (
           <>
-            <div className="flex items-center gap-2 mb-3 px-2.5 py-1.5 rounded-md bg-[#14B8A6]/10 self-start">
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-[#14B8A6]/10 self-start">
               <CheckCircle2 className="h-3.5 w-3.5 text-[#0D9488]" />
               <span className="text-xs font-medium text-[#0D9488]">
                 This is you
               </span>
             </div>
-            <div className="space-y-2 mb-4">
+            <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs text-[#1A1D1E]">
                 <Mail className="h-3.5 w-3.5 text-[#6B7280] shrink-0" />
                 <span className="truncate">{email}</span>
@@ -356,7 +356,10 @@ function ProfileCard({
                 <span className="truncate">{phone || 'Not provided'}</span>
               </div>
             </div>
-            <Link href={type === 'author' ? '/dashboard/author' : '/dashboard/publisher'} className="block">
+            <Link
+              href={type === 'author' ? '/dashboard/author' : '/dashboard/publisher'}
+              className="block"
+            >
               <Button
                 variant="outline"
                 className="w-full border-[#E5E7EB] text-[#1A1D1E] hover:bg-[#F5F2EC] h-10 text-sm"
@@ -367,7 +370,7 @@ function ProfileCard({
           </>
         ) : unlocked ? (
           <>
-            <div className="space-y-2 mb-4">
+            <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs text-[#1A1D1E]">
                 <Mail className="h-3.5 w-3.5 text-[#6B7280] shrink-0" />
                 <span className="truncate">{email}</span>
@@ -380,18 +383,11 @@ function ProfileCard({
                 <CheckCircle2 className="h-3 w-3" /> Unlocked
               </div>
             </div>
-            <Link href={`/directory/unlock/${id}?type=${type}&paid=true`} className="block">
-              <Button
-                variant="outline"
-                className="w-full border-[#E5E7EB] text-[#1A1D1E] hover:bg-[#F5F2EC] h-10 text-sm"
-              >
-                View Details
-              </Button>
-            </Link>
+            <MessageButton profileId={id} profileType={type} />
           </>
         ) : (
           <>
-            <div className="mb-4 flex items-center gap-2 text-xs text-[#6B7280]">
+            <div className="flex items-center gap-2 text-xs text-[#6B7280]">
               <Lock className="h-3.5 w-3.5" />
               <span>Contact hidden</span>
             </div>
@@ -404,5 +400,42 @@ function ProfileCard({
         )}
       </div>
     </div>
+  );
+}
+
+function MessageButton({
+  profileId,
+  profileType,
+}: {
+  profileId: string;
+  profileType: 'author' | 'publisher';
+}) {
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  const role = session?.user?.role;
+  if (role !== 'AUTHOR' && role !== 'PUBLISHER' && role !== 'ADMIN') {
+    return null;
+  }
+
+  const goToMessages = () => {
+    const base =
+      role === 'ADMIN'
+        ? '/dashboard/admin/messages'
+        : role === 'AUTHOR'
+        ? '/dashboard/author/messages'
+        : '/dashboard/publisher/messages';
+    router.push(`${base}?userId=${profileId}`);
+  };
+
+  return (
+    <Button
+      onClick={goToMessages}
+      variant="outline"
+      className="w-full border-[#E5E7EB] text-[#1A1D1E] hover:bg-[#F5F2EC] h-10 text-sm"
+    >
+      <MessageSquare className="h-4 w-4 mr-2" />
+      Message
+    </Button>
   );
 }

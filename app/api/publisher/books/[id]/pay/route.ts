@@ -45,7 +45,7 @@ export async function POST(
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXTAUTH_URL}/publisher/payment-success?bookId=${book.id}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.NEXTAUTH_URL}/dashboard/publisher/payment-success?bookId=${book.id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXTAUTH_URL}/dashboard/publisher`,
       metadata: {
         bookId: book.id,

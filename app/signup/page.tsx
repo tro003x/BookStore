@@ -20,11 +20,14 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('READER');
   const [nid, setNid] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
+  const [cv, setCv] = useState<File | null>(null);
+  const [certificate, setCertificate] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -41,7 +44,37 @@ export default function SignupPage() {
       toast.error('Password does not meet requirements');
       return;
     }
+   if (phoneError || (phone && !/^[0-9+\-\s()]+$/.test(phone))) {
+  setPhoneError('Only numbers are acceptable');
+  toast.error('Please fix the phone number');
+  return;
+} 
+// Validate role-specific required fields
+if (role === 'AUTHOR' || role === 'PUBLISHER') {
+  if (!phone) {
+    toast.error('Phone number is required');
+    return;
+  }
+  if (!nid) {
+    toast.error('NID upload is required');
+    return;
+  }
+  if (!selfie) {
+    toast.error('Selfie upload is required');
+    return;
+  }
+}
 
+if (role === 'AUTHOR') {
+  if (!cv) {
+    toast.error('CV upload is required');
+    return;
+  }
+  if (!certificate) {
+    toast.error('Educational certificate upload is required');
+    return;
+  }
+}
     setLoading(true);
 
     try {
@@ -58,13 +91,16 @@ export default function SignupPage() {
         return;
       }
 
-      // Upload NID/selfie for author/publisher
+      // Upload verification docs
       if (role === 'AUTHOR' || role === 'PUBLISHER') {
-        const userId = data.userId;
         const uploadForm = new FormData();
-        uploadForm.append('userId', userId);
+        uploadForm.append('userId', data.userId);
         if (nid) uploadForm.append('nid', nid);
         if (selfie) uploadForm.append('selfie', selfie);
+        if (role === 'AUTHOR') {
+          if (cv) uploadForm.append('cv', cv);
+          if (certificate) uploadForm.append('certificate', certificate);
+        }
 
         await fetch('/api/auth/upload-verification', {
           method: 'POST',
@@ -103,6 +139,7 @@ export default function SignupPage() {
   };
 
   const isVerifiedRole = role === 'AUTHOR' || role === 'PUBLISHER';
+  const isAuthor = role === 'AUTHOR';
 
   // Success screen
   if (submitted) {
@@ -198,13 +235,12 @@ export default function SignupPage() {
                 onBlur={() => setTouched(true)}
                 required
                 placeholder="Enter your password"
-                className={`w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 transition ${
-                  touched && !passwordValid
+                className={`w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 transition ${touched && !passwordValid
                     ? 'border-[#DC2626] focus:ring-[#DC2626]/40 focus:border-[#DC2626]'
                     : touched && passwordValid
-                    ? 'border-[#16A34A] focus:ring-[#16A34A]/40 focus:border-[#16A34A]'
-                    : 'border-[#E5E7EB] focus:ring-[#14B8A6]/40 focus:border-[#14B8A6]'
-                }`}
+                      ? 'border-[#16A34A] focus:ring-[#16A34A]/40 focus:border-[#16A34A]'
+                      : 'border-[#E5E7EB] focus:ring-[#14B8A6]/40 focus:border-[#14B8A6]'
+                  }`}
               />
               <button
                 type="button"
@@ -226,9 +262,8 @@ export default function SignupPage() {
                   return (
                     <li
                       key={rule.key}
-                      className={`flex items-center gap-1.5 text-xs transition-colors ${
-                        passed ? 'text-[#16A34A]' : 'text-[#6B7280]'
-                      }`}
+                      className={`flex items-center gap-1.5 text-xs transition-colors ${passed ? 'text-[#16A34A]' : 'text-[#6B7280]'
+                        }`}
                     >
                       {passed ? (
                         <Check className="h-3 w-3 shrink-0" />
@@ -270,29 +305,47 @@ export default function SignupPage() {
           {isVerifiedRole && (
             <>
               <div>
-                <label className="block text-sm font-medium text-[#1A1D1E]">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                  placeholder="+880 1XXX-XXXXXX"
-                  className="mt-1 w-full px-4 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14B8A6]/40 focus:border-[#14B8A6]"
-                />
-              </div>
+  <label className="block text-sm font-medium text-[#1A1D1E]">
+    Phone Number
+  </label>
+  <input
+    type="tel"
+    value={phone}
+    onChange={(e) => {
+      const val = e.target.value;
+      setPhone(val);
+      // Allow digits, spaces, +, -, (, )
+      const valid = /^[0-9+\-\s()]*$/.test(val);
+      if (!valid) {
+        setPhoneError('Only numbers are acceptable');
+      } else {
+        setPhoneError('');
+      }
+    }}
+    required
+    placeholder="+880 1XXX-XXXXXX"
+    className={`mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
+      phoneError
+        ? 'border-[#DC2626] focus:ring-[#DC2626]/40 focus:border-[#DC2626]'
+        : 'border-[#E5E7EB] focus:ring-[#14B8A6]/40 focus:border-[#14B8A6]'
+    }`}
+  />
+  {phoneError && (
+    <p className="mt-1 text-xs text-[#DC2626]">{phoneError}</p>
+  )}
+</div>
 
               <div>
                 <label className="block text-sm font-medium text-[#1A1D1E]">
                   NID Upload
                 </label>
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setNid(e.target.files?.[0] || null)}
-                  className="mt-1 w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#6B7280] file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-[#4B5D45] file:text-white file:text-xs hover:file:opacity-90 cursor-pointer"
-                />
+  type="file"
+  accept="image/*"
+  required
+  onChange={(e) => setNid(e.target.files?.[0] || null)}
+  className="mt-1 w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#6B7280] file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-[#4B5D45] file:text-white file:text-xs hover:file:opacity-90 cursor-pointer"
+/>
               </div>
 
               <div>
@@ -300,12 +353,49 @@ export default function SignupPage() {
                   Selfie Upload
                 </label>
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setSelfie(e.target.files?.[0] || null)}
-                  className="mt-1 w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#6B7280] file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-[#4B5D45] file:text-white file:text-xs hover:file:opacity-90 cursor-pointer"
-                />
+  type="file"
+  accept="image/*"
+  required
+  onChange={(e) => setSelfie(e.target.files?.[0] || null)}
+  className="mt-1 w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#6B7280] file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-[#4B5D45] file:text-white file:text-xs hover:file:opacity-90 cursor-pointer"
+/>
               </div>
+
+              {isAuthor && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-[#1A1D1E]">
+                      CV / Resume (PDF)
+                    </label>
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      required
+                      onChange={(e) => setCv(e.target.files?.[0] || null)}
+                      className="mt-1 w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#6B7280] file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-[#4B5D45] file:text-white file:text-xs hover:file:opacity-90 cursor-pointer"
+                    />
+                    <p className="mt-1 text-xs text-[#6B7280]">
+                      Upload your CV or resume as PDF.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#1A1D1E]">
+                      Educational Certificate (Image)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      required
+                      onChange={(e) => setCertificate(e.target.files?.[0] || null)}
+                      className="mt-1 w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#6B7280] file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-[#4B5D45] file:text-white file:text-xs hover:file:opacity-90 cursor-pointer"
+                    />
+                    <p className="mt-1 text-xs text-[#6B7280]">
+                      Upload a photo of your educational certificate.
+                    </p>
+                  </div>
+                </>
+              )}
             </>
           )}
 
@@ -327,4 +417,8 @@ export default function SignupPage() {
       </div>
     </div>
   );
+}
+
+function setPhoneError(arg0: string) {
+  throw new Error('Function not implemented.');
 }

@@ -24,7 +24,6 @@ import {
 import StatusBadge from '@/components/dashboard/StatusBadge';
 import BookForm from '@/components/BookForm';
 import { Pencil, Trash2 } from 'lucide-react';
-import Link from 'next/link';
 import { toast } from 'sonner';
 
 interface Book {
@@ -53,9 +52,9 @@ export default function PublisherBooksPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bookToDelete, setBookToDelete] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [payingBookId, setPayingBookId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === 'loading') return;
     if (status === 'unauthenticated') {
       router.push('/login');
       return;
@@ -86,7 +85,6 @@ export default function PublisherBooksPage() {
       setCategories(categoriesData);
     } catch (error) {
       console.error('Fetch error:', error);
-      toast.error('Failed to load books');
     } finally {
       setLoading(false);
     }
@@ -113,9 +111,9 @@ export default function PublisherBooksPage() {
         const err = await res.json();
         throw new Error(err.error || 'Update failed');
       }
-      setDialogOpen(false);
-      await fetchData();
       toast.success('Book updated');
+      setDialogOpen(false);
+      fetchData();
     } catch (err: any) {
       toast.error(err.message || 'Update failed');
     }
@@ -128,15 +126,45 @@ export default function PublisherBooksPage() {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('Delete failed');
-      setDeleteDialogOpen(false);
-      await fetchData();
       toast.success('Book deleted');
+      setDeleteDialogOpen(false);
+      fetchData();
     } catch (err: any) {
       toast.error(err.message || 'Delete failed');
     }
   };
 
-  if (loading) return <div className="p-8 text-center">Loading...</div>;
+  const handlePay = async (bookId: string) => {
+    try {
+      setPayingBookId(bookId);
+      const res = await fetch(`/api/publisher/books/${bookId}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error(data.error || 'Failed to start payment');
+        setPayingBookId(null);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Payment error');
+      setPayingBookId(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#E5E7EB] border-t-[#14B8A6] animate-spin" />
+          <p className="text-sm text-[#6B7280]">Loading books...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -169,14 +197,26 @@ export default function PublisherBooksPage() {
                   <TableCell>{b.author}</TableCell>
                   <TableCell>${Number(b.price).toFixed(2)}</TableCell>
                   <TableCell>{b.category.name}</TableCell>
-                  <TableCell><StatusBadge status={b.status} /></TableCell>
+                  <TableCell>
+                    <StatusBadge status={b.status} />
+                  </TableCell>
                   <TableCell>
                     {b.status === 'DRAFT' && b.paymentStatus === 'UNPAID' ? (
-                      <Link href={`/dashboard/publisher/pay/${b.id}`}>
-                        <Button size="sm" className="bg-[#A85C32] text-white hover:bg-[#A85C32]/80">
-                          Pay $10
-                        </Button>
-                      </Link>
+                      <Button
+                        size="sm"
+                        onClick={() => handlePay(b.id)}
+                        disabled={payingBookId === b.id}
+                        className="bg-[#A85C32] text-white hover:bg-[#A85C32]/80 disabled:opacity-50"
+                      >
+                        {payingBookId === b.id ? (
+                          <span className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                            Paying...
+                          </span>
+                        ) : (
+                          'Pay $10'
+                        )}
+                      </Button>
                     ) : b.paymentStatus === 'PAID' ? (
                       <span className="text-xs text-[#16A34A]">Paid</span>
                     ) : (
@@ -244,7 +284,10 @@ export default function PublisherBooksPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 text-white hover:bg-red-700">
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -252,4 +295,4 @@ export default function PublisherBooksPage() {
       </AlertDialog>
     </div>
   );
-}
+} 

@@ -19,23 +19,23 @@ enum Role {
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
-  passwordHash String?  // nullable because we might have OAuth later, but for now we'll set it
+  passwordHash String?
   name         String?
   role         Role     @default(READER)
-  
-   emailVerified DateTime?
-
+  emailVerified DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  publisher    Publisher?
-  author Author?  
-  cart         Cart?    // one-to-one with Cart
-  purchases    Purchase[]
-  reviews Review[]
- contactUnlocks ContactUnlock[]
- passwordResetTokens PasswordResetToken[]
- verificationTokens VerificationToken[]
+  publisher          Publisher?
+  author             Author?
+  cart               Cart?
+  purchases          Purchase[]
+  reviews            Review[]
+  contactUnlocks     ContactUnlock[]
+  passwordResetTokens PasswordResetToken[]
+  verificationTokens  VerificationToken[]
+  sentMessages        Message[] @relation("SentMessages")      // ← ADD
+  receivedMessages    Message[] @relation("ReceivedMessages")   // ← ADD
 }
 
 model VerificationToken {
@@ -80,11 +80,11 @@ model Author {
   bio                String?
   email              String
   phone              String?
-  nidUrl     String?
-  selfieUrl  String?
-  nidPath     String?
-  selfiePath  String?
   verificationStatus VerificationStatus @default(PENDING)
+  nidPath            String?
+  selfiePath         String?
+  cvPath             String?              // ← ADD
+  certificatePath    String?              // ← ADD
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -100,6 +100,20 @@ enum VerificationStatus {
 enum PaymentStatus {
   UNPAID
   PAID
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([senderId, receiverId])
+  @@index([receiverId, read])
 }
 
 model Category {
