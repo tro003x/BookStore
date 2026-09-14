@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { Send, MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
 
 interface Contact {
   id: string;
@@ -83,9 +84,9 @@ export default function ChatPanel({ initialUserId }: { initialUserId?: string })
     fetchThread(activeUserId);
 
     const interval = setInterval(() => {
-      fetchThread(activeUserId, true);
-      fetchContacts();
-    }, 3000);
+  fetchThread(activeUserId, true);
+  fetchContacts();
+}, 10000);
 
     return () => clearInterval(interval);
   }, [activeUserId]);

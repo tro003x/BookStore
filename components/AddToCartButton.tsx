@@ -66,13 +66,13 @@ export default function AddToCartButton({ bookId }: { bookId: string }) {
       <button
         onClick={handleAdd}
         disabled={loading}
-        className="bg-[#4B5D45] hover:bg-[#3E4C39] hover:-translate-y-0.5 hover:shadow-md text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50"
+        className="bg-[#4B5D45] hover:bg-[#3E4C39] hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(75,93,69,0.25)] text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50"
       >
         {loading ? 'Adding...' : 'Add to cart'}
       </button>
       <button
         onClick={handleBuyNow}
-        className="bg-[#A85C32] hover:bg-[#8F4D2A] hover:-translate-y-0.5 hover:shadow-md text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+        className="bg-[#A85C32] hover:bg-[#8F4D2A] hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(168,92,50,0.25)] text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300"
       >
         Buy Now
       </button>

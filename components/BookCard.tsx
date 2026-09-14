@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import AddToCartButton from './AddToCartButton';
 import StarRating from './StarRating';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 const categoryColors: Record<string, string> = {
   Science: '#14B8A6',
@@ -12,6 +11,13 @@ const categoryColors: Record<string, string> = {
   Biography: '#7A5C8F',
   'Self-Help': '#3C6E8F',
   History: '#8F6B3C',
+  Poetry: '#B85C7A',
+  Novel: '#C97B3C',
+  Fantasy: '#6B4B9E',
+  Mystery: '#4A5568',
+  Romance: '#D9528A',
+  Technology: '#2D6E7E',
+  Philosophy: '#8B6F47',
 };
 
 interface BookCardProps {
@@ -39,34 +45,36 @@ export default function BookCard({ book }: BookCardProps) {
   return (
     <Card
       onClick={handleCardClick}
-      className="overflow-hidden border border-[#E5E7EB] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 bg-white cursor-pointer flex flex-col"
+      className="group overflow-hidden border border-[#E5E7EB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 bg-white cursor-pointer flex flex-col rounded-lg py-0 gap-0"
     >
-      <div className="relative aspect-[3/4] rounded-t-lg overflow-hidden bg-[#F5F2EC]">
-  {book.coverImageUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={book.coverImageUrl}
-      alt={book.title}
-      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-    />
-  ) : (
-    <div className="w-full h-full flex items-center justify-center text-[#6B7280] text-sm">
-      No cover
-    </div>
-  )}
+      {/* Cover */}
+      <div className="relative aspect-[3/4] overflow-hidden bg-[#F5F2EC]">
+        {book.coverImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={book.coverImageUrl}
+            alt={book.title}
+            className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-[#6B7280] text-sm">
+            No cover
+          </div>
+        )}
 
-  {/* Category spine bar */}
-  <div
-    className="absolute left-0 top-0 w-1 h-full"
-    style={{ backgroundColor: color }}
-  />
+        {/* Category spine bar */}
+        <div
+          className="absolute left-0 top-0 w-1 h-full"
+          style={{ backgroundColor: color }}
+        />
 
-  {/* Subtle bottom gradient for depth (matches library) */}
-  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
-</div>
+        {/* Bottom gradient for depth */}
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
+      </div>
 
-      <CardHeader className="pb-2">
-        <CardTitle className="font-['Fraunces'] text-lg line-clamp-1 hover:text-[#14B8A6] transition-colors">
+      {/* Title + author + rating */}
+      <CardHeader className="px-4 pt-4 pb-2">
+        <CardTitle className="font-['Fraunces'] text-lg line-clamp-1 transition-colors duration-200 group-hover:text-[#14B8A6]">
           {book.title}
         </CardTitle>
         <p className="text-sm text-[#6B7280]">{book.authorName}</p>
@@ -78,14 +86,16 @@ export default function BookCard({ book }: BookCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1">
+      {/* Price */}
+      <CardContent className="px-4 flex-1 pb-4">
         <p className="font-['IBM_Plex_Mono'] text-[#C97B3C] font-bold text-lg">
           ${price.toFixed(2)}
         </p>
       </CardContent>
 
+      {/* Buttons */}
       <CardFooter
-        className="flex justify-center gap-2 pt-3 pb-4 bg-white border-t border-[#F5F2EC]"
+        className="flex justify-center gap-2 px-4 pt-4 pb-4 bg-white border-t border-[#F5F2EC]"
         onClick={(e) => e.stopPropagation()}
       >
         <AddToCartButton bookId={book.id} />
