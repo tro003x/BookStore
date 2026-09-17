@@ -9,6 +9,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const sender = `"${process.env.GMAIL_SENDER_NAME || 'BoiStore'}" <${process.env.GMAIL_USER}>`;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 async function sendEmail(to: string, subject: string, html: string) {
   console.log('[EMAIL] Sending to:', to);
@@ -27,7 +28,7 @@ export async function sendVerificationEmail(
   token: string,
   name: string
 ) {
-  const verifyLink = `${process.env.NEXTAUTH_URL}/verify-email?token=${token}`;
+  const verifyLink = `${APP_URL}/verify-email?token=${token}`;
   await sendEmail(
     email,
     'Verify your BoiStore email',
@@ -49,7 +50,7 @@ export async function sendVerificationEmail(
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetLink = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
+  const resetLink = `${APP_URL}/reset-password?token=${token}`;
   await sendEmail(
     email,
     'Reset your BoiStore password',
