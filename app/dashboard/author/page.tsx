@@ -16,6 +16,7 @@ import {
 import { BookOpen, ShoppingBag, DollarSign } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
 import DownloadReportButton from '@/components/dashboard/DownloadReportButton';
+import VerificationGate from '@/components/dashboard/VerificationGate';
 
 interface Stats {
   totalBooks: number;
@@ -77,6 +78,15 @@ export default function AuthorDashboardPage() {
     );
   }
 
+  if (session?.user?.verificationStatus !== 'APPROVED') {
+    return (
+      <VerificationGate
+        role="author"
+        status={session?.user?.verificationStatus}
+      />
+    );
+  }
+
   const weeklyData =
     stats?.weeklyChart && stats.weeklyChart.length > 0
       ? stats.weeklyChart
@@ -92,7 +102,6 @@ export default function AuthorDashboardPage() {
 
   return (
     <div>
-      {/* Header + download */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-['Fraunces'] text-2xl font-semibold text-[#0C0A00]">
@@ -108,7 +117,6 @@ export default function AuthorDashboardPage() {
         />
       </div>
 
-      {/* Stat cards */}
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <StatCard
           title="Total Books"
@@ -127,7 +135,6 @@ export default function AuthorDashboardPage() {
         />
       </div>
 
-      {/* Weekly + Monthly */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <Card>
           <CardHeader>
@@ -170,7 +177,6 @@ export default function AuthorDashboardPage() {
         </Card>
       </div>
 
-      {/* Yearly */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium">Yearly Sales</CardTitle>

@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import StatusBadge from '@/components/dashboard/StatusBadge';
 import BookForm from '@/components/BookForm';
+import VerificationGate from '@/components/dashboard/VerificationGate';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -63,6 +64,7 @@ export default function PublisherBooksPage() {
       router.push('/');
       return;
     }
+    if (session?.user?.verificationStatus !== 'APPROVED') return;
     fetchData();
   }, [status, session, router]);
 
@@ -166,6 +168,15 @@ export default function PublisherBooksPage() {
     );
   }
 
+  if (session?.user?.verificationStatus !== 'APPROVED') {
+    return (
+      <VerificationGate
+        role="publisher"
+        status={session?.user?.verificationStatus}
+      />
+    );
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-4">My Books</h1>
@@ -248,7 +259,6 @@ export default function PublisherBooksPage() {
         </Table>
       </div>
 
-      {/* Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -273,7 +283,6 @@ export default function PublisherBooksPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -295,4 +304,4 @@ export default function PublisherBooksPage() {
       </AlertDialog>
     </div>
   );
-} 
+}

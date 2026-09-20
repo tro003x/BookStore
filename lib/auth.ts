@@ -9,6 +9,7 @@ declare module 'next-auth' {
     user: {
       id: string;
       role: string;
+      verificationStatus?: string | null;
       name?: string | null;
       email?: string | null;
       image?: string | null;
@@ -16,6 +17,7 @@ declare module 'next-auth' {
   }
   interface User {
     role: string;
+    verificationStatus?: string | null;
   }
 }
 
@@ -40,15 +42,7 @@ export const authOptions: NextAuthOptions = {
 
         if (!user || !user.passwordHash) return null;
 
-        // Block unverified users
-        if (!user.emailVerified) {
-          throw new Error('EMAIL_NOT_VERIFIED');
-        }
-
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash
-        );
+        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
 
         return {
@@ -65,14 +59,19 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role;
         token.id = user.id;
-      } else if (token.email) {
+      }
+      if (token.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email as string },
-          select: { role: true, id: true },
+          include: { author: true, publisher: true },
         });
         if (dbUser) {
           token.role = dbUser.role;
           token.id = dbUser.id;
+          token.verificationStatus =
+            dbUser.author?.verificationStatus ??
+            dbUser.publisher?.verificationStatus ??
+            null;
         }
       }
       return token;
@@ -81,23 +80,9 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.role = token.role as string;
         session.user.id = token.sub as string;
+        session.user.verificationStatus = token.verificationStatus as string | null;
       }
       return session;
-    },
-    // For Google OAuth: mark as verified automatically
-    async signIn({ user, account }) {
-      if (account?.provider === 'google' && user.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: user.email },
-        });
-        if (dbUser && !dbUser.emailVerified) {
-          await prisma.user.update({
-            where: { id: dbUser.id },
-            data: { emailVerified: new Date() },
-          });
-        }
-      }
-      return true;
     },
   },
   session: { strategy: 'jwt' },

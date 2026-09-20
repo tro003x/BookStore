@@ -9,6 +9,17 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  const publisher = await prisma.publisher.findUnique({
+  where: { userId: user.id },
+});
+
+if (!publisher || publisher.verificationStatus !== 'APPROVED') {
+  return NextResponse.json(
+    { error: 'Account pending verification' },
+    { status: 403 }
+  );
+}
+
   const books = await prisma.book.findMany({
     where: { 
       publisherId: user.publisher.id,

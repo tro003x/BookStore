@@ -5,14 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import BookForm from '@/components/BookForm';
+import VerificationGate from '@/components/dashboard/VerificationGate';
 import { toast } from 'sonner';
 
 export default function PublisherSubmitPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    if (status === 'loading') return;
     if (status === 'unauthenticated') {
       router.push('/login');
       return;
@@ -21,6 +24,7 @@ export default function PublisherSubmitPage() {
       router.push('/');
       return;
     }
+    setChecking(false);
 
     const fetchCategories = async () => {
       const res = await fetch('/api/categories');
@@ -29,6 +33,26 @@ export default function PublisherSubmitPage() {
     };
     fetchCategories();
   }, [status, session, router]);
+
+  if (status === 'loading' || checking) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-[#E5E7EB] border-t-[#14B8A6] animate-spin" />
+          <p className="text-sm text-[#6B7280]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (session?.user?.verificationStatus !== 'APPROVED') {
+    return (
+      <VerificationGate
+        role="publisher"
+        status={session?.user?.verificationStatus}
+      />
+    );
+  }
 
   const handleSubmit = async (formData: FormData) => {
     const res = await fetch('/api/publisher/books', {
