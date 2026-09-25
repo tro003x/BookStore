@@ -91,7 +91,6 @@ if (role === 'AUTHOR') {
         return;
       }
 
-      // Upload verification docs
       if (role === 'AUTHOR' || role === 'PUBLISHER') {
         const uploadForm = new FormData();
         uploadForm.append('userId', data.userId);
@@ -350,7 +349,7 @@ if (role === 'AUTHOR') {
 
               <div>
                 <label className="block text-sm font-medium text-[#1A1D1E]">
-                  Selfie Upload
+                  Organization License Upload
                 </label>
                 <input
   type="file"
