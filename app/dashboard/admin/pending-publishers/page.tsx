@@ -174,13 +174,13 @@ export default function PendingPublishersPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
               <div>
                 <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-2">
-                  NID
+                  Representative's NID
                 </p>
                 {selected.nidUrl ? (
                   <a href={selected.nidUrl} target="_blank" rel="noopener noreferrer">
                     <img
                       src={selected.nidUrl}
-                      alt="NID"
+                      alt="Representative's NID"
                       className="w-full h-52 object-cover rounded-lg border border-[#E5E7EB] hover:opacity-90 transition cursor-pointer"
                     />
                   </a>
@@ -193,13 +193,13 @@ export default function PendingPublishersPage() {
 
               <div>
                 <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-2">
-                  Selfie
+                  License
                 </p>
                 {selected.selfieUrl ? (
                   <a href={selected.selfieUrl} target="_blank" rel="noopener noreferrer">
                     <img
                       src={selected.selfieUrl}
-                      alt="Selfie"
+                      alt="License"
                       className="w-full h-52 object-cover rounded-lg border border-[#E5E7EB] hover:opacity-90 transition cursor-pointer"
                     />
                   </a>

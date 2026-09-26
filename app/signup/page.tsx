@@ -336,7 +336,7 @@ if (role === 'AUTHOR') {
 
               <div>
                 <label className="block text-sm font-medium text-[#1A1D1E]">
-                  NID Upload
+                  Upload Representative's NID
                 </label>
                 <input
   type="file"
