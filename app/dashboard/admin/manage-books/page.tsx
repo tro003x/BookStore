@@ -148,7 +148,7 @@ export default function ManageBooksPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
-              <TableHead>Author</TableHead>
+              {/* <TableHead>Author</TableHead> */}
               <TableHead>Category</TableHead>
               <TableHead>Publisher</TableHead>
               <TableHead>Price</TableHead>
@@ -167,7 +167,7 @@ export default function ManageBooksPage() {
               books.map((b) => (
                 <TableRow key={b.id}>
                   <TableCell className="font-medium">{b.title}</TableCell>
-                  <TableCell>{b.author}</TableCell>
+                  {/* <TableCell>{b.author}</TableCell> */}
                   <TableCell>{b.category.name}</TableCell>
                   <TableCell>{b.publisher.name}</TableCell>
                   <TableCell>${Number(b.price).toFixed(2)}</TableCell>
